@@ -678,7 +678,7 @@ public class FileProcessor extends DaemonThread {
      * avoid the overhead of DbTree.getDb on every entry we keep a set of
      * all DB IDs encountered and do the check once per DB at the end.
      */
-    final Set<DatabaseId> checkPendingDbSet = countOnly ? null : new HashSet<>();
+    final Set<DatabaseId> checkPendingDbSet = countOnly ? null : new HashSet<DatabaseId>();
 
     /*
      * Use local caching to reduce DbTree.getDb overhead.  Do not call

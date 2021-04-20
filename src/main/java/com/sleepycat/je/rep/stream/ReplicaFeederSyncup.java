@@ -18,10 +18,7 @@ import com.sleepycat.je.cleaner.FileProtector.ProtectedFileSet;
 import com.sleepycat.je.config.EnvironmentParams;
 import com.sleepycat.je.dbi.DbConfigManager;
 import com.sleepycat.je.dbi.EnvironmentImpl;
-import com.sleepycat.je.rep.InsufficientLogException;
-import com.sleepycat.je.rep.RollbackException;
-import com.sleepycat.je.rep.RollbackProhibitedException;
-import com.sleepycat.je.rep.SyncupProgress;
+import com.sleepycat.je.rep.*;
 import com.sleepycat.je.rep.impl.RepImpl;
 import com.sleepycat.je.rep.impl.RepParams;
 import com.sleepycat.je.rep.impl.node.RepNode;
@@ -674,7 +671,7 @@ public class ReplicaFeederSyncup {
     RestoreResponse response = (RestoreResponse) protocol.read(namedChannel);
 
     return new InsufficientLogException(
-        repNode, new HashSet<>(Arrays.asList(response.getLogProviders())));
+        repNode, new HashSet<ReplicationNode>(Arrays.asList(response.getLogProviders())));
   }
 
   /**

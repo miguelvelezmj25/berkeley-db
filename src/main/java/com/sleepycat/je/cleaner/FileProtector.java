@@ -371,7 +371,7 @@ public class FileProtector {
     for (final ReservedFileInfo info : reservedFiles.values()) {
       size += info.size;
     }
-    return new Pair<>(size, new TreeSet<>(reservedFiles.keySet()));
+    return new Pair<Long, NavigableSet<Long>>(size, new TreeSet<>(reservedFiles.keySet()));
   }
 
   /**
@@ -461,52 +461,53 @@ public class FileProtector {
   /** Returns sizes occupied by active, reserved and protected files. */
   synchronized LogSizeStats getLogSizeStats() {
 
-    /* Calculate active size. */
-    final NavigableMap<Long, Long> activeFiles = getActiveFiles();
-    long activeSize = 0;
-
-    for (final long size : activeFiles.values()) {
-      activeSize += size;
-    }
-
-    /* Add size of last file, which is not included in activeFiles. */
-    final long lastFileNum = activeFiles.isEmpty() ? 0 : activeFiles.lastKey() + 1;
-
-    final File lastFile = new File(envImpl.getFileManager().getFullFileName(lastFileNum));
-
-    if (lastFile.exists()) {
-      activeSize += lastFile.length();
-    }
-
-    /* Calculate reserved and protected sizes. */
-    long reservedSize = 0;
-    long protectedSize = 0;
-    final Map<String, Long> protectedSizeMap = new HashMap<>();
-
-    for (final Map.Entry<Long, ReservedFileInfo> entry : reservedFiles.entrySet()) {
-
-      final Long file = entry.getKey();
-      final ReservedFileInfo info = entry.getValue();
-      reservedSize += info.size;
-      boolean isProtected = false;
-
-      for (final ProtectedFileSet pfs : protectedFileSets.values()) {
-
-        if (pfs == vlsnIndexRange || !pfs.isProtected(file, info)) {
-          continue;
-        }
-
-        isProtected = true;
-
-        protectedSizeMap.compute(pfs.getName(), (k, v) -> ((v != null) ? v : 0) + info.size);
-      }
-
-      if (isProtected) {
-        protectedSize += info.size;
-      }
-    }
-
-    return new LogSizeStats(activeSize, reservedSize, protectedSize, protectedSizeMap);
+//    /* Calculate active size. */
+//    final NavigableMap<Long, Long> activeFiles = getActiveFiles();
+//    long activeSize = 0;
+//
+//    for (final long size : activeFiles.values()) {
+//      activeSize += size;
+//    }
+//
+//    /* Add size of last file, which is not included in activeFiles. */
+//    final long lastFileNum = activeFiles.isEmpty() ? 0 : activeFiles.lastKey() + 1;
+//
+//    final File lastFile = new File(envImpl.getFileManager().getFullFileName(lastFileNum));
+//
+//    if (lastFile.exists()) {
+//      activeSize += lastFile.length();
+//    }
+//
+//    /* Calculate reserved and protected sizes. */
+//    long reservedSize = 0;
+//    long protectedSize = 0;
+//    final Map<String, Long> protectedSizeMap = new HashMap<>();
+//
+//    for (final Map.Entry<Long, ReservedFileInfo> entry : reservedFiles.entrySet()) {
+//
+//      final Long file = entry.getKey();
+//      final ReservedFileInfo info = entry.getValue();
+//      reservedSize += info.size;
+//      boolean isProtected = false;
+//
+//      for (final ProtectedFileSet pfs : protectedFileSets.values()) {
+//
+//        if (pfs == vlsnIndexRange || !pfs.isProtected(file, info)) {
+//          continue;
+//        }
+//
+//        isProtected = true;
+//
+//        protectedSizeMap.compute(pfs.getName(), (k, v) -> ((v != null) ? v : 0) + info.size);
+//      }
+//
+//      if (isProtected) {
+//        protectedSize += info.size;
+//      }
+//    }
+//
+//    return new LogSizeStats(activeSize, reservedSize, protectedSize, protectedSizeMap);
+    throw new UnsupportedOperationException("Java 1.8");
   }
 
   /**

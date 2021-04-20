@@ -199,19 +199,20 @@ public class NetworkRestore {
   /** Sorts the refreshed server list by load and computes minVLSN. */
   private void resetServerList(List<Server> serverList) {
 
-    if (serverList.isEmpty()) {
-      return;
-    }
-
-    /* Natural comparator sorts by Server.load. */
-    Collections.sort(serverList);
-
-    /* Get server with max VLSN range end. */
-    Server maxVlsnServer =
-        Collections.max(serverList, Comparator.comparingLong(s -> s.rangeEnd.getSequence()));
-
-    /* Subtract lag and ensure that result is GTE 0. */
-    minVLSN = new VLSN(Math.max(0, maxVlsnServer.rangeEnd.getSequence() - maxLag));
+//    if (serverList.isEmpty()) {
+//      return;
+//    }
+//
+//    /* Natural comparator sorts by Server.load. */
+//    Collections.sort(serverList);
+//
+//    /* Get server with max VLSN range end. */
+//    Server maxVlsnServer =
+//        Collections.max(serverList, Comparator.comparingLong(s -> s.rangeEnd.getSequence()));
+//
+//    /* Subtract lag and ensure that result is GTE 0. */
+//    minVLSN = new VLSN(Math.max(0, maxVlsnServer.rangeEnd.getSequence() - maxLag));
+    throw new UnsupportedOperationException("Java 1.8");
   }
 
   /**

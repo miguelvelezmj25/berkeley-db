@@ -254,7 +254,7 @@ public class Cleaner implements DaemonRunner, EnvConfigObserver {
     nDiskReads = new LongStat(statGroup, CLEANER_DISK_READS);
     nRepeatIteratorReads = new LongStat(statGroup, CLEANER_REPEAT_ITERATOR_READS);
 
-    logSizeStats = new FileProtector.LogSizeStats(0, 0, 0, new HashMap<>());
+    logSizeStats = new FileProtector.LogSizeStats(0, 0, 0, new HashMap<String, Long>());
 
     if (env.isMemOnly()) {
       fileStoreInfo = null;
