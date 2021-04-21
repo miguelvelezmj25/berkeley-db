@@ -54,46 +54,46 @@ public class MeasureDiskOrderedScan {
     this.sequentialWrites = SEQUENTIAL;
     this.jeCacheSize = MAX_MEMORY;
 
-//    if (lsnBatchSize != Long.MAX_VALUE && internalMemoryLimit != Long.MAX_VALUE) {
-//      throw new IllegalArgumentException(
-//          "Only one of lsnBatchSize and internalMemoryLimit may be "
-//              + "specified (not equal to Long.MAX_VALUE)");
-//    }
-//    if (dupDb && !dataSizeSpecified) {
-//      dataSize = keySize;
-//    }
+    if (lsnBatchSize != Long.MAX_VALUE && internalMemoryLimit != Long.MAX_VALUE) {
+      throw new IllegalArgumentException(
+          "Only one of lsnBatchSize and internalMemoryLimit may be "
+              + "specified (not equal to Long.MAX_VALUE)");
+    }
+    if (dupDb && !dataSizeSpecified) {
+      dataSize = keySize;
+    }
   }
 
-  public static void main(String[] args) {
-//    ADLER32_CHUNK_SIZE = EnvironmentParams.ADLER32_CHUNK_SIZE.getDefault();
-//    CACHE_MODE = CacheMode.EVICT_LN;
-//    CHECKPOINTER_BYTES_INTERVAL = EnvironmentParams.CHECKPOINTER_BYTES_INTERVAL.getDefault();
-    DUPLICATES = edu.cmu.cs.mvelezce.optionhotspot.sources.Sources.getDuplicates(false);
-//    ENV_BACKGROUND_READ_LIMIT = EnvironmentParams.ENV_BACKGROUND_READ_LIMIT.getDefault();
-//    ENV_IS_LOCKING = true;
-//    ENV_SHARED_CACHE = false;
-//    JE_DURABILITY = Durability.COMMIT_NO_SYNC;
-//    JE_FILE_LEVEL = "OFF";
-//    LOCK_DEADLOCK_DETECT = false;
-//    LOCK_DEADLOCK_DETECT_DELAY = EnvironmentParams.LOCK_DEADLOCK_DETECT_DELAY.getDefault();
-//    MAX_MEMORY = 1000L * 1000;
-//    REPLICATED = false;
-//    SEQUENTIAL = false;
-//    TEMPORARY = false;
-    TRANSACTIONS = edu.cmu.cs.mvelezce.optionhotspot.sources.Sources.getTransactions(false);
-//    TXN_SERIALIZABLE_ISOLATION = false;
+  public static void main(String[] args) throws IOException {
+    ADLER32_CHUNK_SIZE = EnvironmentParams.ADLER32_CHUNK_SIZE.getDefault();
+    CACHE_MODE = CacheMode.EVICT_LN;
+    CHECKPOINTER_BYTES_INTERVAL = EnvironmentParams.CHECKPOINTER_BYTES_INTERVAL.getDefault();
+    DUPLICATES = false;
+    ENV_BACKGROUND_READ_LIMIT = EnvironmentParams.ENV_BACKGROUND_READ_LIMIT.getDefault();
+    ENV_IS_LOCKING = true;
+    ENV_SHARED_CACHE = false;
+    JE_DURABILITY = Durability.COMMIT_NO_SYNC;
+    JE_FILE_LEVEL = "OFF";
+    LOCK_DEADLOCK_DETECT = false;
+    LOCK_DEADLOCK_DETECT_DELAY = EnvironmentParams.LOCK_DEADLOCK_DETECT_DELAY.getDefault();
+    MAX_MEMORY = 1000L * 1000;
+    REPLICATED = false;
+    SEQUENTIAL = false;
+    TEMPORARY = false;
+    TRANSACTIONS = false;
+    TXN_SERIALIZABLE_ISOLATION = false;
 
-try {//    File output = new File("./tmp");
-//    FileUtils.forceDelete(output);
-//    FileUtils.forceMkdir(output);
-    new MeasureDiskOrderedScan().exec();}catch(Exception e) {}
+    File output = new File("./tmp");
+    FileUtils.forceDelete(output);
+    FileUtils.forceMkdir(output);
+    new MeasureDiskOrderedScan().exec();
 
-//    System.out.println("LogManager.COUNT_LOG " + LogManager.COUNT_LOG);
-//    System.out.println("FileManager.COUNT_READ " + FileManager.COUNT_READ);
-//    System.out.println("FileManager.COUNT_WRITE " + FileManager.COUNT_WRITE);
-//    System.out.println("FileManager$LogEndFileDescriptor.COUNT_FORCE " + FileManager.COUNT_FORCE);
-//    System.out.println("IN.COUNT_FIND " + IN.COUNT_FIND);
-//    System.out.println("IN.COUNT_SERIALIZE " + IN.COUNT_SERIALIZE);
+    System.out.println("LogManager.COUNT_LOG " + LogManager.COUNT_LOG);
+    System.out.println("FileManager.COUNT_READ " + FileManager.COUNT_READ);
+    System.out.println("FileManager.COUNT_WRITE " + FileManager.COUNT_WRITE);
+    System.out.println("FileManager$LogEndFileDescriptor.COUNT_FORCE " + FileManager.COUNT_FORCE);
+    System.out.println("IN.COUNT_FIND " + IN.COUNT_FIND);
+    System.out.println("IN.COUNT_SERIALIZE " + IN.COUNT_SERIALIZE);
   }
 
   private static long maxMemory(boolean option) {
@@ -177,29 +177,29 @@ try {//    File output = new File("./tmp");
   }
 
   private void exec() throws IOException {
-    open();
-//    if (preload) {
-//      db.preload(null); /* LNs are not loaded. */
-//    }
-//    final double startTime = System.currentTimeMillis();
-//    switch (action) {
-//      case Populate:
-        populate();
-//        break;
-//      case DirtyReadScan:
-//        dirtyReadScan();
-//        break;
-//      case DiskOrderedScan:
-//        diskOrderedScan();
-//        break;
-//      default:
-//        fail(action);
-//    }
-//    final double endTime = System.currentTimeMillis();
-//    final double totalSecs = (endTime - startTime) / 1000;
-//    final double throughput = nRecords / totalSecs;
-//    System.out.println("\nTotal seconds: " + totalSecs + " txn/sec: " + throughput);
-//    close();
+    this.open();
+    if (preload) {
+      db.preload(null); /* LNs are not loaded. */
+    }
+    final double startTime = System.currentTimeMillis();
+    switch (action) {
+      case Populate:
+        this.populate();
+        break;
+      case DirtyReadScan:
+        this.dirtyReadScan();
+        break;
+      case DiskOrderedScan:
+        this.diskOrderedScan();
+        break;
+      default:
+        fail(action);
+    }
+    final double endTime = System.currentTimeMillis();
+    final double totalSecs = (endTime - startTime) / 1000;
+    final double throughput = nRecords / totalSecs;
+    System.out.println("\nTotal seconds: " + totalSecs + " txn/sec: " + throughput);
+    close();
   }
 
   private void open() throws IOException {
@@ -299,9 +299,9 @@ try {//    File output = new File("./tmp");
       } else {
         status = db.putNoOverwrite(key, putType, data);
       }
-//      if (status != OperationStatus.SUCCESS) {
-//        fail(status);
-//      }
+      if (status != OperationStatus.SUCCESS) {
+        fail(status);
+      }
       //      /* Update to create waste */
       //      status = db.put(null, key, data);
       //      if (status != OperationStatus.SUCCESS) {

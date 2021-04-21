@@ -243,7 +243,7 @@ public class DbTree implements Loggable {
   /** Create a dbTree from the log. */
   public DbTree() {
     this.envImpl = null;
-    idDatabase = null;//new DatabaseImpl();
+    idDatabase = null;
     idDatabase.setDebugDatabaseName(DbType.ID.getInternalName());
 
     /*
@@ -251,7 +251,7 @@ public class DbTree implements Loggable {
      * for testing this forces it off.
      */
     idDatabase.clearKeyPrefixing();
-    nameDatabase = null;//new DatabaseImpl();
+    nameDatabase = null;
     nameDatabase.clearKeyPrefixing();
     nameDatabase.setDebugDatabaseName(DbType.NAME.getInternalName());
 
@@ -452,114 +452,114 @@ public class DbTree implements Loggable {
       ReplicationContext repContext)
       throws DatabaseException {
 
-//    /* Create a new database object. */
-//    DatabaseId newId = null;
-//    long allocatedLocalDbId = 0;
-//    long allocatedRepDbId = 0;
-//    if (replicatedLN != null) {
-//
-//      /*
-//       * This database was created on a master node and is being
-//       * propagated to this client node.
-//       */
-//      newId = replicatedLN.getId();
-//    } else {
-//
-//      /*
-//       * This database has been created locally, either because this is
-//       * a non-replicated node or this is the replicated group master.
-//       */
-//      if (envImpl.isReplicated() && dbConfig.getReplicated()) {
-//        newId = new DatabaseId(getNextReplicatedDbId());
-//        allocatedRepDbId = newId.getId();
-//      } else {
-//        newId = new DatabaseId(getNextLocalDbId());
-//        allocatedLocalDbId = newId.getId();
-//      }
-//    }
-//
+    /* Create a new database object. */
+    DatabaseId newId = null;
+    long allocatedLocalDbId = 0;
+    long allocatedRepDbId = 0;
+    if (replicatedLN != null) {
+
+      /*
+       * This database was created on a master node and is being
+       * propagated to this client node.
+       */
+      newId = replicatedLN.getId();
+    } else {
+
+      /*
+       * This database has been created locally, either because this is
+       * a non-replicated node or this is the replicated group master.
+       */
+      if (envImpl.isReplicated() && dbConfig.getReplicated()) {
+        newId = new DatabaseId(getNextReplicatedDbId());
+        allocatedRepDbId = newId.getId();
+      } else {
+        newId = new DatabaseId(getNextLocalDbId());
+        allocatedLocalDbId = newId.getId();
+      }
+    }
+
     DatabaseImpl newDb = null;
-//    CursorImpl idCursor = null;
-//    CursorImpl nameCursor = null;
-//    boolean operationOk = false;
-//    Locker idDbLocker = null;
-//    try {
+    CursorImpl idCursor = null;
+    CursorImpl nameCursor = null;
+    boolean operationOk = false;
+    Locker idDbLocker = null;
+    try {
       newDb = new DatabaseImpl(nameLocker, databaseName, /*newId*/null, envImpl, dbConfig);
-//
-//      /* Get effective rep context and check for replica write. */
-//      ReplicationContext useRepContext = repContext;
-//      if (repContext == null) {
-//        useRepContext = newDb.getOperationRepContext(CREATE);
-//      }
-//      checkReplicaWrite(nameLocker, useRepContext);
-//
-//      /* Insert it into name -> id db. */
-//      nameCursor = new CursorImpl(nameDatabase, nameLocker);
-//      LN nameLN = null;
-//      if (replicatedLN != null) {
-//        nameLN = replicatedLN;
-//      } else {
-//        nameLN = new NameLN(newId);
-//      }
-//
-//      nameCursor.insertRecord(
-//          StringUtils.toUTF8(databaseName), // key
-//          nameLN,
-//          false /*blindInsertion*/,
-//          useRepContext);
-//
-//      /* Record handle lock. */
-//      if (handleLocker != null) {
-//        acquireHandleLock(nameCursor, handleLocker);
-//      }
-//
-//      /* Insert it into id -> name db, in auto commit mode. */
-//      idDbLocker = BasicLocker.createBasicLocker(envImpl);
-//      idCursor = new CursorImpl(idDatabase, idDbLocker);
-//
-//      idCursor.insertRecord(
-//          newId.getBytes() /*key*/,
-//          new MapLN(newDb) /*ln*/,
-//          false /*blindInsertion*/,
-//          ReplicationContext.NO_REPLICATE);
-//
-//      /* Increment DB use count with lock held. */
-//      newDb.incrementUseCount();
-//      operationOk = true;
-//    } finally {
-//      if (idCursor != null) {
-//        idCursor.close();
-//      }
-//
-//      if (nameCursor != null) {
-//        nameCursor.close();
-//      }
-//
-//      if (idDbLocker != null) {
-//        idDbLocker.operationEnd(operationOk);
-//      }
-//
-//      /*
-//       * Undo the allocation of the database ID if DB creation fails.  We
-//       * use compareAndSet so that we don't undo the assignment of the ID
-//       * by another concurrent operation, for example, truncation.
-//       *
-//       * Note that IDs are not conserved in doTruncateDb when a failure
-//       * occurs.  This inconsistency is historical and may or may not be
-//       * the best approach.
-//       *
-//       * [#18642]
-//       */
-//      if (!operationOk) {
-//        if (allocatedRepDbId != 0) {
-//          lastAllocatedReplicatedDbId.compareAndSet(allocatedRepDbId, allocatedRepDbId + 1);
-//        }
-//        if (allocatedLocalDbId != 0) {
-//          lastAllocatedLocalDbId.compareAndSet(allocatedLocalDbId, allocatedLocalDbId - 1);
-//        }
-//      }
-//    }
-//
+
+      /* Get effective rep context and check for replica write. */
+      ReplicationContext useRepContext = repContext;
+      if (repContext == null) {
+        useRepContext = newDb.getOperationRepContext(CREATE);
+      }
+      checkReplicaWrite(nameLocker, useRepContext);
+
+      /* Insert it into name -> id db. */
+      nameCursor = new CursorImpl(nameDatabase, nameLocker);
+      LN nameLN = null;
+      if (replicatedLN != null) {
+        nameLN = replicatedLN;
+      } else {
+        nameLN = new NameLN(newId);
+      }
+
+      nameCursor.insertRecord(
+          StringUtils.toUTF8(databaseName), // key
+          nameLN,
+          false /*blindInsertion*/,
+          useRepContext);
+
+      /* Record handle lock. */
+      if (handleLocker != null) {
+        acquireHandleLock(nameCursor, handleLocker);
+      }
+
+      /* Insert it into id -> name db, in auto commit mode. */
+      idDbLocker = BasicLocker.createBasicLocker(envImpl);
+      idCursor = new CursorImpl(idDatabase, idDbLocker);
+
+      idCursor.insertRecord(
+          newId.getBytes() /*key*/,
+          new MapLN(newDb) /*ln*/,
+          false /*blindInsertion*/,
+          ReplicationContext.NO_REPLICATE);
+
+      /* Increment DB use count with lock held. */
+      newDb.incrementUseCount();
+      operationOk = true;
+    } finally {
+      if (idCursor != null) {
+        idCursor.close();
+      }
+
+      if (nameCursor != null) {
+        nameCursor.close();
+      }
+
+      if (idDbLocker != null) {
+        idDbLocker.operationEnd(operationOk);
+      }
+
+      /*
+       * Undo the allocation of the database ID if DB creation fails.  We
+       * use compareAndSet so that we don't undo the assignment of the ID
+       * by another concurrent operation, for example, truncation.
+       *
+       * Note that IDs are not conserved in doTruncateDb when a failure
+       * occurs.  This inconsistency is historical and may or may not be
+       * the best approach.
+       *
+       * [#18642]
+       */
+      if (!operationOk) {
+        if (allocatedRepDbId != 0) {
+          lastAllocatedReplicatedDbId.compareAndSet(allocatedRepDbId, allocatedRepDbId + 1);
+        }
+        if (allocatedLocalDbId != 0) {
+          lastAllocatedLocalDbId.compareAndSet(allocatedLocalDbId, allocatedLocalDbId - 1);
+        }
+      }
+    }
+
     return newDb;
   }
 

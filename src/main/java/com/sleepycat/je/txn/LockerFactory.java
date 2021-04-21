@@ -48,58 +48,58 @@ public class LockerFactory {
       final boolean autoTxnIsReplicated,
       TransactionConfig autoCommitConfig) {
 
-//    final EnvironmentImpl envImpl = DbInternal.getNonNullEnvImpl(env);
-//    final boolean envIsTransactional = envImpl.isTransactional();
-//
-//    if (userTxn == null) {
-//      final Transaction xaLocker = env.getThreadTransaction();
-//      if (xaLocker != null) {
-//        return DbInternal.getLocker(xaLocker);
-//      }
-//    }
+    final EnvironmentImpl envImpl = DbInternal.getNonNullEnvImpl(env);
+    final boolean envIsTransactional = envImpl.isTransactional();
+
+    if (userTxn == null) {
+      final Transaction xaLocker = env.getThreadTransaction();
+      if (xaLocker != null) {
+        return DbInternal.getLocker(xaLocker);
+      }
+    }
 
     if (dbIsTransactional) {
 
-//      if (autoCommitConfig == null) {
-//        autoCommitConfig = DbInternal.getDefaultTxnConfig(env);
-//      }
+      if (autoCommitConfig == null) {
+        autoCommitConfig = DbInternal.getDefaultTxnConfig(env);
+      }
 
       return Txn.createAutoTxn(
-          /*envImpl*/null,
+          envImpl,
           autoCommitConfig,
           (autoTxnIsReplicated ? ReplicationContext.MASTER : ReplicationContext.NO_REPLICATE));
     }
 
     if (isInternalDb) {
       /* Non-transactional user operations use ThreadLocker. */
-      return ThreadLocker.createThreadLocker(/*envImpl*/null, autoTxnIsReplicated);
+      return ThreadLocker.createThreadLocker(envImpl, autoTxnIsReplicated);
     }
 
-//    /*
-//     * The user provided a transaction, so the environment and the
-//     * database had better be opened transactionally.
-//     */
-//    if (!isInternalDb && !envIsTransactional) {
-//      throw new IllegalArgumentException(
-//          "A Transaction cannot be used because the"
-//              + " environment was opened non-transactionally");
-//    }
-//    if (!dbIsTransactional) {
-//      throw new IllegalArgumentException(
-//          "A Transaction cannot be used because the" + " database was opened non-transactionally");
-//    }
-//
-//    /*
-//     * Use the locker for the given transaction.  For read-committed,
-//     * wrap the given transactional locker in a special locker for that
-//     * isolation level.
-//     */
-//    final Locker locker = DbInternal.getLocker(userTxn);
-//    if (locker.isReadCommittedIsolation()) {
-//      return ReadCommittedLocker.createReadCommittedLocker(envImpl, locker);
-//    }
-//
-throw new UnsupportedOperationException();//    return locker;
+    /*
+     * The user provided a transaction, so the environment and the
+     * database had better be opened transactionally.
+     */
+    if (!isInternalDb && !envIsTransactional) {
+      throw new IllegalArgumentException(
+          "A Transaction cannot be used because the"
+              + " environment was opened non-transactionally");
+    }
+    if (!dbIsTransactional) {
+      throw new IllegalArgumentException(
+          "A Transaction cannot be used because the" + " database was opened non-transactionally");
+    }
+
+    /*
+     * Use the locker for the given transaction.  For read-committed,
+     * wrap the given transactional locker in a special locker for that
+     * isolation level.
+     */
+    final Locker locker = DbInternal.getLocker(userTxn);
+    if (locker.isReadCommittedIsolation()) {
+      return ReadCommittedLocker.createReadCommittedLocker(envImpl, locker);
+    }
+
+    return locker;
   }
 
   /** Get a locker for a read or cursor operation. */

@@ -1,2 +1,7 @@
+<<<<<<< HEAD
 com.sleepycat.je.Cursor,1846
 com.sleepycat.je.Cursor,1847
+=======
+com.sleepycat.je.Cursor,1845
+com.sleepycat.je.Cursor,1846
+>>>>>>> fb467aa (updated code)

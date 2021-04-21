@@ -181,74 +181,74 @@ public class DatabaseImpl implements Loggable, Cloneable {
       Locker locker, String dbName, DatabaseId id, EnvironmentImpl envImpl, DatabaseConfig dbConfig)
       throws DatabaseException {
 
-//    this.id = id;
-//    this.envImpl = envImpl;
+    this.id = id;
+    this.envImpl = envImpl;
 
-    setConfigProperties(locker, dbName, dbConfig, envImpl);
-//    cacheMode = dbConfig.getCacheMode();
-//
-//    createdAtLogVersion = LogEntryType.LOG_VERSION;
-//
-//    /* A new DB is implicitly converted to the new dups format. */
-//    if (getSortedDuplicates()) {
-//      setDupsConverted();
-//    }
-//
-//    /*
-//     * New DB records do not need utilization repair.  Set this before
-//     * calling initWithEnvironment to avoid repair overhead.
-//     */
-//    setUtilizationRepairDone();
-//
-//    commonInit();
-//
-//    initWithEnvironment();
-//
-//    /*
-//     * The tree needs the env, make sure we assign it before
-//     * allocating the tree.
-//     */
-//    tree = new Tree(this);
-//
-//    /* For error messages only. */
-//    debugDatabaseName = dbName;
+    this.setConfigProperties(locker, dbName, dbConfig, envImpl);
+    cacheMode = dbConfig.getCacheMode();
+
+    createdAtLogVersion = LogEntryType.LOG_VERSION;
+
+    /* A new DB is implicitly converted to the new dups format. */
+    if (getSortedDuplicates()) {
+      setDupsConverted();
+    }
+
+    /*
+     * New DB records do not need utilization repair.  Set this before
+     * calling initWithEnvironment to avoid repair overhead.
+     */
+    setUtilizationRepairDone();
+
+    commonInit();
+
+    initWithEnvironment();
+
+    /*
+     * The tree needs the env, make sure we assign it before
+     * allocating the tree.
+     */
+    tree = new Tree(this);
+
+    /* For error messages only. */
+    debugDatabaseName = dbName;
   }
 
   /* Set the DatabaseConfig properties for a DatabaseImpl. */
   public void setConfigProperties(
       Locker locker, String dbName, DatabaseConfig dbConfig, EnvironmentImpl envImpl) {
-//    setBtreeComparator(dbConfig.getBtreeComparator(), dbConfig.getBtreeComparatorByClassName());
-//    setDuplicateComparator(
-//        dbConfig.getDuplicateComparator(), dbConfig.getDuplicateComparatorByClassName());
-//
-//    setTriggers(locker, dbName, dbConfig.getTriggers(), true /*overridePersistentTriggers*/);
-//
-//    if (dbConfig.getSortedDuplicates()) {
-//      setSortedDuplicates();
-//    }
+    setBtreeComparator(dbConfig.getBtreeComparator(), dbConfig.getBtreeComparatorByClassName());
+    setDuplicateComparator(
+        dbConfig.getDuplicateComparator(), dbConfig.getDuplicateComparatorByClassName());
+
+    setTriggers(locker, dbName, dbConfig.getTriggers(), true /*overridePersistentTriggers*/);
+
+    if (dbConfig.getSortedDuplicates()) {
+      setSortedDuplicates();
+    }
     this.duplicateKeys = dbConfig.getSortedDuplicates();
-//
-//    if (dbConfig.getKeyPrefixing() || forceKeyPrefixing) {
-//      setKeyPrefixing();
-//    } else {
-//      clearKeyPrefixing();
-//    }
-//
-//    if (dbConfig.getTemporary()) {
-//      setTemporary();
-//    }
-//
-//    if (envImpl.isReplicated()) {
-//      if (dbConfig.getReplicated()) {
-//        setIsReplicatedBit();
-//      } else {
-//        setNotReplicatedBit();
-//      }
-//    }
+
+    if (dbConfig.getKeyPrefixing() || forceKeyPrefixing) {
+      setKeyPrefixing();
+    } else {
+      clearKeyPrefixing();
+    }
+
+    if (dbConfig.getTemporary()) {
+      setTemporary();
+    }
+
+    if (envImpl.isReplicated()) {
+      if (dbConfig.getReplicated()) {
+        setIsReplicatedBit();
+      } else {
+        setNotReplicatedBit();
+      }
+    }
 
     this.transactional = dbConfig.getTransactional();
-//    durableDeferredWrite = dbConfig.getDeferredWrite();
-//    maxTreeEntriesPerNode = dbConfig.getNodeMaxEntries();
+    this.durableDeferredWrite = dbConfig.getDeferredWrite();
+    this.maxTreeEntriesPerNode = dbConfig.getNodeMaxEntries();
   }
 
   private void commonInit() {
@@ -422,7 +422,7 @@ public class DatabaseImpl implements Loggable, Cloneable {
 
   /** @return true if this database is transactional. */
   public boolean isTransactional() {
-    return transactional;
+    return this.transactional;
   }
 
   /** Sets the transactional property for the first opened handle. */

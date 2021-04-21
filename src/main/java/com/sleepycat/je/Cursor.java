@@ -26,7 +26,7 @@ import com.sleepycat.je.tree.LN;
 import com.sleepycat.je.txn.BuddyLocker;
 import com.sleepycat.je.txn.LockType;
 import com.sleepycat.je.txn.Locker;
-import com.sleepycat.je.txn.LockerFactory;
+import com.sleepycat.je.txn.Txn;
 import com.sleepycat.je.utilint.DatabaseUtil;
 import com.sleepycat.je.utilint.LoggerUtils;
 
@@ -176,18 +176,18 @@ public class Cursor implements ForwardCursor {
 
   Cursor(final Database dbHandle, Locker locker, PutMode putMode, CursorConfig cursorConfig) {
 
-//    if (cursorConfig == null) {
-//      cursorConfig = CursorConfig.DEFAULT;
-//    }
-//
-//    /* Check that Database is open for internal Cursor usage. */
+    if (cursorConfig == null) {
+      cursorConfig = CursorConfig.DEFAULT;
+    }
+
+    /* Check that Database is open for internal Cursor usage. */
     final DatabaseImpl dbImpl = dbHandle.getDatabaseImpl();
 
     this.locker = locker;
     this.putMode = putMode;
     this.dbImpl = dbImpl;
 
-//    init(dbHandle, dbImpl, locker, cursorConfig, false /*retainNonTxnLocks*/);
+    init(dbHandle, dbImpl, locker, cursorConfig, false /*retainNonTxnLocks*/);
   }
 
   private void init(
@@ -4641,8 +4641,8 @@ public class Cursor implements ForwardCursor {
     if (this.transaction == null) {
       return;
     }
-//    this.transaction.checkOpen();
-    throw new UnsupportedOperationException(); //    this.transaction.getTxn().checkState(false /*calledByAbort*/);
+    this.transaction.checkOpen();
+    this.transaction.getTxn().checkState(false /*calledByAbort*/);
   }
 
   /**

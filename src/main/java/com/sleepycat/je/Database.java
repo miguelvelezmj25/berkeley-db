@@ -150,15 +150,15 @@ public class Database implements Closeable {
    */
   Collection<SecondaryDatabase> foreignKeySecondaries;
 
-  /*final*/ Logger logger;
+  final Logger logger;
 
   /**
    * Creates a database but does not open or fully initialize it. Is protected for use in compat
    * package.
    */
   Database(final Environment env) {
-//    this.envHandle = env;
-//    logger = getEnv().getLogger();
+    this.envHandle = env;
+    logger = getEnv().getLogger();
   }
 
   /** Creates a database, called by Environment. */
@@ -168,13 +168,13 @@ public class Database implements Closeable {
       final String databaseName,
       final DatabaseConfig dbConfig) {
 
-//    dbConfig.validateForNewDb();
+    dbConfig.validateForNewDb();
 
-//    init(env, dbConfig);
+    init(env, dbConfig);
 
     /* Make the databaseImpl. */
-    this.databaseImpl = new DatabaseImpl(locker, databaseName, /*newId*/null, null, dbConfig);/*getEnv().getDbTree()*//*new DbTree().createDb(locker, databaseName, dbConfig, handleLocker);*/
-//    this.databaseImpl.addReferringHandle(this);
+    this.databaseImpl = new DatabaseImpl(locker, databaseName, null, getEnv(), dbConfig);
+    this.databaseImpl.addReferringHandle(this);
     return this.databaseImpl;
   }
 
@@ -1317,39 +1317,39 @@ public class Database implements Closeable {
       final Put putType,
       final WriteOptions options) {
 
-//    try {
-//      checkEnv();
+    try {
+      checkEnv();
 
-//      if (putType == Put.CURRENT) {
-//        throw new IllegalArgumentException("putType may not be Put.CURRENT");
-//      }
+      if (putType == Put.CURRENT) {
+        throw new IllegalArgumentException("putType may not be Put.CURRENT");
+      }
 
       OperationResult result = null;
 
-//      trace(Level.FINEST, "Database.put", String.valueOf(putType), txn, key, data, null);
+      trace(Level.FINEST, "Database.put", String.valueOf(putType), null, key, data, null);
       boolean transactionalDb = this.databaseImpl.isTransactional();
       final Locker locker =
-          LockerFactory.getWritableLocker(
+        LockerFactory.getWritableLocker(
               /*envHandle*/null,
               /*dbImpl.isInternalDb()*/false,
               transactionalDb,
               /*dbImpl.isReplicated()*/false, null); // autoTxnIsReplicated
 
-//      try {
+      try {
         PutMode putMode = putType.getPutMode();
         try (final Cursor cursor = new Cursor(this, locker, putMode, DEFAULT_CURSOR_CONFIG)) {
 
-          result = cursor.putInternal(key, data, options.getCacheMode(), ExpirationInfo.getInfo(options));//          result = cursor.putInternal(key, data, putType, options);
+          result = cursor.putInternal(key, data, options.getCacheMode(), ExpirationInfo.getInfo(options));
         }
-//      } finally {
-//        locker.operationEnd(result != null);
-//      }
+      } finally {
+        locker.operationEnd(result != null);
+      }
 
       return result;
-//    } catch (Error E) {
-//      envHandle.invalidate(E);
-//      throw E;
-//    }
+    } catch (Error E) {
+      envHandle.invalidate(E);
+      throw E;
+    }
   }
 
   public OperationStatus putNoOverwrite(final DatabaseEntry key, final Put putType, final DatabaseEntry data) {
@@ -1868,21 +1868,21 @@ public class Database implements Closeable {
   }
 
   DatabaseImpl getDatabaseImpl() {
-//    switch (state) {
-//      case OPEN:
+    switch (state) {
+      case OPEN:
         return this.databaseImpl;
-//      case CLOSED:
-//        throw new IllegalStateException("Database was closed.");
-//      case INVALID:
-//        throw new IllegalStateException("The Transaction used to open the Database was aborted.");
-//      case PREEMPTED:
-//        throw preemptedCause.wrapSelf(preemptedCause.getMessage());
-//      case CORRUPTED:
-//        throw corruptedCause.wrapSelf(corruptedCause.getMessage());
-//      default:
-//        assert false : state;
-//        return null;
-//    }
+      case CLOSED:
+        throw new IllegalStateException("Database was closed.");
+      case INVALID:
+        throw new IllegalStateException("The Transaction used to open the Database was aborted.");
+      case PREEMPTED:
+        throw preemptedCause.wrapSelf(preemptedCause.getMessage());
+      case CORRUPTED:
+        throw corruptedCause.wrapSelf(corruptedCause.getMessage());
+      default:
+        assert false : state;
+        return null;
+    }
   }
 
   /**

@@ -189,7 +189,7 @@ public class DatabaseConfig implements Cloneable {
   }
 
   public DatabaseConfig setSortedDuplicates(boolean sortedDuplicates) {
-    setSortedDuplicatesVoid(sortedDuplicates);
+    this.setSortedDuplicatesVoid(sortedDuplicates);
     return this;
   }
 
@@ -256,7 +256,7 @@ public class DatabaseConfig implements Cloneable {
   }
 
   public DatabaseConfig setTransactional(boolean transactional) {
-    setTransactionalVoid(transactional);
+    this.setTransactionalVoid(transactional);
     return this;
   }
 
