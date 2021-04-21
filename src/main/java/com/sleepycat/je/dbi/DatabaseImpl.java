@@ -80,6 +80,7 @@ public class DatabaseImpl implements Loggable, Cloneable {
   private Tree tree;
   private EnvironmentImpl envImpl; // Tree operations find the env this way
   private boolean transactional; // All open handles are transactional
+  public boolean duplicateKeys; // Handle duplicate keys
   private boolean durableDeferredWrite; // Durable deferred write mode set
   private volatile boolean dirty; // Utilization, root LSN, etc., changed
   private Set<Database> referringHandles; // Set of open Database handles
@@ -172,7 +173,7 @@ public class DatabaseImpl implements Loggable, Cloneable {
 
   static {
     String forceKeyPrefixingProp = System.getProperty("je.forceKeyPrefixing");
-      forceKeyPrefixing = "true".equals(forceKeyPrefixingProp);
+    forceKeyPrefixing = "true".equals(forceKeyPrefixingProp);
   }
 
   /** Create a database object for a new database. */
@@ -180,89 +181,74 @@ public class DatabaseImpl implements Loggable, Cloneable {
       Locker locker, String dbName, DatabaseId id, EnvironmentImpl envImpl, DatabaseConfig dbConfig)
       throws DatabaseException {
 
-    this.id = id;
-    this.envImpl = envImpl;
+//    this.id = id;
+//    this.envImpl = envImpl;
 
     setConfigProperties(locker, dbName, dbConfig, envImpl);
-    cacheMode = dbConfig.getCacheMode();
-
-    createdAtLogVersion = LogEntryType.LOG_VERSION;
-
-    /* A new DB is implicitly converted to the new dups format. */
-    if (getSortedDuplicates()) {
-      setDupsConverted();
-    }
-
-    /*
-     * New DB records do not need utilization repair.  Set this before
-     * calling initWithEnvironment to avoid repair overhead.
-     */
-    setUtilizationRepairDone();
-
-    commonInit();
-
-    initWithEnvironment();
-
-    /*
-     * The tree needs the env, make sure we assign it before
-     * allocating the tree.
-     */
-    tree = new Tree(this);
-
-    /* For error messages only. */
-    debugDatabaseName = dbName;
-  }
-
-  /**
-   * Create an empty database object for initialization from the log. Note that the rest of the
-   * initialization comes from readFromLog(), except for the debugDatabaseName, which is set by the
-   * caller.
-   */
-  public DatabaseImpl() {
-    id = new DatabaseId();
-    envImpl = null;
-
-    tree = new Tree();
-
-    commonInit();
-
-    /* initWithEnvironment is called after reading and envImpl is set.  */
+//    cacheMode = dbConfig.getCacheMode();
+//
+//    createdAtLogVersion = LogEntryType.LOG_VERSION;
+//
+//    /* A new DB is implicitly converted to the new dups format. */
+//    if (getSortedDuplicates()) {
+//      setDupsConverted();
+//    }
+//
+//    /*
+//     * New DB records do not need utilization repair.  Set this before
+//     * calling initWithEnvironment to avoid repair overhead.
+//     */
+//    setUtilizationRepairDone();
+//
+//    commonInit();
+//
+//    initWithEnvironment();
+//
+//    /*
+//     * The tree needs the env, make sure we assign it before
+//     * allocating the tree.
+//     */
+//    tree = new Tree(this);
+//
+//    /* For error messages only. */
+//    debugDatabaseName = dbName;
   }
 
   /* Set the DatabaseConfig properties for a DatabaseImpl. */
   public void setConfigProperties(
       Locker locker, String dbName, DatabaseConfig dbConfig, EnvironmentImpl envImpl) {
-    setBtreeComparator(dbConfig.getBtreeComparator(), dbConfig.getBtreeComparatorByClassName());
-    setDuplicateComparator(
-        dbConfig.getDuplicateComparator(), dbConfig.getDuplicateComparatorByClassName());
+//    setBtreeComparator(dbConfig.getBtreeComparator(), dbConfig.getBtreeComparatorByClassName());
+//    setDuplicateComparator(
+//        dbConfig.getDuplicateComparator(), dbConfig.getDuplicateComparatorByClassName());
+//
+//    setTriggers(locker, dbName, dbConfig.getTriggers(), true /*overridePersistentTriggers*/);
+//
+//    if (dbConfig.getSortedDuplicates()) {
+//      setSortedDuplicates();
+//    }
+    this.duplicateKeys = dbConfig.getSortedDuplicates();
+//
+//    if (dbConfig.getKeyPrefixing() || forceKeyPrefixing) {
+//      setKeyPrefixing();
+//    } else {
+//      clearKeyPrefixing();
+//    }
+//
+//    if (dbConfig.getTemporary()) {
+//      setTemporary();
+//    }
+//
+//    if (envImpl.isReplicated()) {
+//      if (dbConfig.getReplicated()) {
+//        setIsReplicatedBit();
+//      } else {
+//        setNotReplicatedBit();
+//      }
+//    }
 
-    setTriggers(locker, dbName, dbConfig.getTriggers(), true /*overridePersistentTriggers*/);
-
-    if (dbConfig.getSortedDuplicates()) {
-      setSortedDuplicates();
-    }
-
-    if (dbConfig.getKeyPrefixing() || forceKeyPrefixing) {
-      setKeyPrefixing();
-    } else {
-      clearKeyPrefixing();
-    }
-
-    if (dbConfig.getTemporary()) {
-      setTemporary();
-    }
-
-    if (envImpl.isReplicated()) {
-      if (dbConfig.getReplicated()) {
-        setIsReplicatedBit();
-      } else {
-        setNotReplicatedBit();
-      }
-    }
-
-    transactional = dbConfig.getTransactional();
-    durableDeferredWrite = dbConfig.getDeferredWrite();
-    maxTreeEntriesPerNode = dbConfig.getNodeMaxEntries();
+    this.transactional = dbConfig.getTransactional();
+//    durableDeferredWrite = dbConfig.getDeferredWrite();
+//    maxTreeEntriesPerNode = dbConfig.getNodeMaxEntries();
   }
 
   private void commonInit() {
@@ -451,6 +437,14 @@ public class DatabaseImpl implements Loggable, Cloneable {
 
   public static boolean isTemporary(byte flagVal) {
     return ((flagVal & TEMPORARY_BIT) != 0);
+  }
+
+  public boolean getDuplicateKeys() {
+    return duplicateKeys;
+  }
+
+  public void setDuplicateKeys(boolean duplicateKeys) {
+    this.duplicateKeys = duplicateKeys;
   }
 
   public boolean isInternalDb() {

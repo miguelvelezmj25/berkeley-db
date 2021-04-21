@@ -188,41 +188,11 @@ public class DatabaseConfig implements Cloneable {
     return exclusiveCreate;
   }
 
-  /**
-   * Configures the database to support records with duplicate keys.
-   *
-   * <p>When duplicate keys are configured for a database, key prefixing is also implicitly
-   * configured. Without key prefixing, databases with duplicates would store keys inefficiently.
-   * Key prefixing is therefore mandatory for databases with duplicates.
-   *
-   * <p>Although two records may have the same key, they may not also have the same data item. Two
-   * identical records, that have the same key and data, may not be stored in a database.
-   *
-   * <p>The ordering of duplicates in the database is determined by the duplicate comparison
-   * function. See {@link #setDuplicateComparator}. If the application does not specify a duplicate
-   * comparison function, a default lexical comparison will be used.
-   *
-   * <p>If a primary database is to be associated with one or more secondary databases, it may not
-   * be configured for duplicates.
-   *
-   * <p>Calling this method affects the database, including all threads of control accessing the
-   * database.
-   *
-   * <p>If the database already exists when the database is opened, any database configuration
-   * specified by this method must be the same as the existing database or an error will be
-   * returned.
-   *
-   * @param sortedDuplicates If true, configure the database to support duplicate data items. A
-   *     value of false is illegal to this method, that is, once set, the configuration cannot be
-   *     cleared.
-   * @return this
-   */
   public DatabaseConfig setSortedDuplicates(boolean sortedDuplicates) {
     setSortedDuplicatesVoid(sortedDuplicates);
     return this;
   }
 
-  /** @hidden The void return setter for use by Bean editors. */
   public void setSortedDuplicatesVoid(boolean sortedDuplicates) {
     this.sortedDuplicates = sortedDuplicates;
     if (sortedDuplicates) {
@@ -285,24 +255,11 @@ public class DatabaseConfig implements Cloneable {
     this.keyPrefixing = keyPrefixing;
   }
 
-  /**
-   * Encloses the database open within a transaction.
-   *
-   * <p>If the call succeeds, the open operation will be recoverable. If the call fails, no database
-   * will have been created.
-   *
-   * <p>All future operations on this database, which are not explicitly enclosed in a transaction
-   * by the application, will be enclosed in in a transaction within the library.
-   *
-   * @param transactional If true, enclose the database open within a transaction.
-   * @return this
-   */
   public DatabaseConfig setTransactional(boolean transactional) {
     setTransactionalVoid(transactional);
     return this;
   }
 
-  /** @hidden The void return setter for use by Bean editors. */
   public void setTransactionalVoid(boolean transactional) {
     this.transactional = transactional;
   }

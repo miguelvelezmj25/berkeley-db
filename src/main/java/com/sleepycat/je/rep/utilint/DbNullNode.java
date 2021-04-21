@@ -343,7 +343,7 @@ public class DbNullNode {
       IntegerBinding.intToEntry(0, key);
       txn = repEnv.beginTransaction(null, txnConfig);
       for (int i = 0; i < updates; i++) {
-        db.put(txn, key, key);
+//        db.put(txn, key, key);
       }
       txn.commit();
       System.err.println(new Date() + " Wrote " + updates + " updates");

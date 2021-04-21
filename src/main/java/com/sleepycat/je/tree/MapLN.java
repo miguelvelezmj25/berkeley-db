@@ -96,7 +96,7 @@ public final class MapLN extends LN {
   /** Create an empty MapLN, to be filled in from the log. */
   public MapLN() {
     super();
-    databaseImpl = new DatabaseImpl();
+    databaseImpl = null;//new DatabaseImpl();
   }
 
   @Override

@@ -425,7 +425,7 @@ public class PrimaryIndex<PK, E> extends BasicIndex<PK, E> {
     assignKey(entity, keyEntry);
     entityBinding.objectToData(entity, dataEntry);
 
-    db.put(txn, keyEntry, dataEntry);
+//    db.put(txn, keyEntry, dataEntry);
   }
 
   /**

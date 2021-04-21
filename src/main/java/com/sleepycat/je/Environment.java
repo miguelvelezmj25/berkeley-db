@@ -126,10 +126,10 @@ public class Environment implements Closeable {
 
   private TransactionConfig defaultTxnConfig;
   private EnvironmentMutableConfig handleConfig;
-  private final EnvironmentConfig appliedFinalConfig;
+  private EnvironmentConfig appliedFinalConfig;
 
-  private final Map<Database, Database> referringDbs;
-  private final Map<Transaction, Transaction> referringDbTxns;
+  private Map<Database, Database> referringDbs;
+  private Map<Transaction, Transaction> referringDbTxns;
 
   /**
    * @hidden The name of the cleaner daemon thread. This constant is passed to an ExceptionEvent's
@@ -193,7 +193,7 @@ public class Environment implements Closeable {
       throws
           DatabaseException, IllegalArgumentException {
 
-    this(envHome, configuration, null /*repConfigProxy*/, null /*envImplParam*/);
+//    this(envHome, configuration, null /*repConfigProxy*/, null /*envImplParam*/);
   }
 
   /**
@@ -536,53 +536,27 @@ public class Environment implements Closeable {
     }
   }
 
-  /**
-   * Opens, and optionally creates, a <code>Database</code>.
-   *
-   * @param txn For a transactional database, an explicit transaction may be specified, or null may
-   *     be specified to use auto-commit. For a non-transactional database, null must be specified.
-   * @param databaseName The name of the database.
-   * @param dbConfig The database attributes. If null, default attributes are used.
-   * @return Database handle.
-   * @throws DatabaseExistsException if the database already exists and the {@code DatabaseConfig
-   *     ExclusiveCreate} parameter is true.
-   * @throws DatabaseNotFoundException if the database does not exist and the {@code DatabaseConfig
-   *     AllowCreate} parameter is false.
-   * @throws OperationFailureException if one of the <a
-   *     href="../je/OperationFailureException.html#readFailures">Read Operation Failures</a>
-   *     occurs. If the database does not exist and the {@link DatabaseConfig#setAllowCreate
-   *     AllowCreate} parameter is true, then one of the <a
-   *     href="../je/OperationFailureException.html#writeFailures">Write Operation Failures</a> may
-   *     also occur.
-   * @throws EnvironmentFailureException if an unexpected, internal or environment-wide failure
-   *     occurs.
-   * @throws IllegalStateException if this handle or the underlying environment has been closed.
-   * @throws IllegalArgumentException if an invalid parameter is specified, for example, an invalid
-   *     {@code DatabaseConfig} property.
-   * @throws IllegalStateException if DatabaseConfig properties are changed and there are other open
-   *     handles for this database.
-   */
   public synchronized Database openDatabase(
       Transaction txn, String databaseName, DatabaseConfig dbConfig)
       throws DatabaseNotFoundException, DatabaseExistsException, IllegalArgumentException,
           IllegalStateException {
 
-    final EnvironmentImpl envImpl = checkOpen();
-
-    if (dbConfig == null) {
-      dbConfig = DatabaseConfig.DEFAULT;
-    }
-
-    try {
+//    final EnvironmentImpl envImpl = checkOpen();
+//
+//    if (dbConfig == null) {
+//      dbConfig = DatabaseConfig.DEFAULT;
+//    }
+//
+//    try {
       final Database db = new Database(this);
 
-      setupDatabase(envImpl, txn, db, databaseName, dbConfig, false /*isInternalDb*/);
+      setupDatabase(/*envImpl*/null, txn, db, databaseName, dbConfig, false /*isInternalDb*/);
 
       return db;
-    } catch (Error E) {
-      envImpl.invalidate(E);
-      throw E;
-    }
+//    } catch (Error E) {
+//      envImpl.invalidate(E);
+//      throw E;
+//    }
   }
 
   /**
@@ -647,17 +621,6 @@ public class Environment implements Closeable {
     }
   }
 
-  /**
-   * The meat of open database processing.
-   *
-   * <p>Currently, only external DBs are opened via this method, but we may allow internal DB opens
-   * in the future.
-   *
-   * @param txn may be null
-   * @param newDb is the Database handle which houses this database
-   * @throws IllegalArgumentException via openDatabase and openSecondaryDatabase
-   * @see HandleLocker
-   */
   private void setupDatabase(
       EnvironmentImpl envImpl,
       Transaction txn,
@@ -667,111 +630,111 @@ public class Environment implements Closeable {
       boolean isInternalDb)
       throws DatabaseNotFoundException, DatabaseExistsException {
 
-    DatabaseUtil.checkForNullParam(databaseName, "databaseName");
-
-    LoggerUtils.envLogMsg(
-        Level.FINEST,
-        envImpl,
-        "Environment.open: " + " name=" + databaseName + " dbConfig=" + dbConfig);
-
-    final boolean autoTxnIsReplicated = dbConfig.getReplicated() && envImpl.isReplicated();
-
-    /*
-     * Check that the open configuration is valid and doesn't conflict with
-     * the envImpl configuration.
-     */
-    dbConfig.validateOnDbOpen(databaseName, autoTxnIsReplicated);
-
-    validateDbConfigAgainstEnv(envImpl, dbConfig, databaseName, isInternalDb);
-
-    /* Perform eviction before each operation that allocates memory. */
-    envImpl.criticalEviction(false /*backgroundIO*/);
+//    DatabaseUtil.checkForNullParam(databaseName, "databaseName");
+//
+//    LoggerUtils.envLogMsg(
+//        Level.FINEST,
+//        envImpl,
+//        "Environment.open: " + " name=" + databaseName + " dbConfig=" + dbConfig);
+//
+//    final boolean autoTxnIsReplicated = dbConfig.getReplicated() && envImpl.isReplicated();
+//
+//    /*
+//     * Check that the open configuration is valid and doesn't conflict with
+//     * the envImpl configuration.
+//     */
+//    dbConfig.validateOnDbOpen(databaseName, autoTxnIsReplicated);
+//
+//    validateDbConfigAgainstEnv(envImpl, dbConfig, databaseName, isInternalDb);
+//
+//    /* Perform eviction before each operation that allocates memory. */
+//    envImpl.criticalEviction(false /*backgroundIO*/);
 
     DatabaseImpl database = null;
-    boolean operationOk = false;
-    HandleLocker handleLocker = null;
-    final Locker locker =
-        LockerFactory.getWritableLocker(
-            this, txn, isInternalDb, dbConfig.getTransactional(), autoTxnIsReplicated, null);
-    try {
-
-      /*
-       * Create the handle locker and lock the NameLN of an existing
-       * database.  A read lock on the NameLN is acquired for both locker
-       * and handleLocker.  Note: getDb may return a deleted database.
-       */
-      handleLocker = newDb.initHandleLocker(envImpl, locker);
-      database = envImpl.getDbTree().getDb(locker, databaseName, handleLocker, false);
-
-      boolean dbCreated = false;
-      final boolean databaseExists = (database != null) && !database.isDeleted();
-
-      if (databaseExists) {
-        if (dbConfig.getAllowCreate() && dbConfig.getExclusiveCreate()) {
-          throw new DatabaseExistsException("Database " + databaseName + " already exists");
-        }
-
-        newDb.initExisting(this, locker, database, databaseName, dbConfig);
-      } else {
-        /* Release deleted DB. [#13415] */
-        envImpl.getDbTree().releaseDb(database);
-        database = null;
-
-        if (!isInternalDb && DbTree.isReservedDbName(databaseName)) {
-          throw new IllegalArgumentException(databaseName + " is a reserved database name.");
-        }
-
-        if (!dbConfig.getAllowCreate()) {
-          throw new DatabaseNotFoundException("Database " + databaseName + " not found.");
-        }
-
-        /*
-         * Init a new DB. This calls DbTree.createDb and the new
-         * database is returned.  A write lock on the NameLN is
-         * acquired by locker and a read lock by the handleLocker.
-         */
-        database = newDb.initNew(this, locker, databaseName, dbConfig);
-        dbCreated = true;
-      }
-
-      /*
-       * The open is successful.  We add the opened database handle to
-       * this environment to track open handles in general, and to the
-       * locker so that it can be invalidated by a user txn abort.
-       */
-      operationOk = true;
-      addReferringHandle(newDb);
-      locker.addOpenedDatabase(newDb);
-
-      /* Run triggers before any subsequent auto commits. */
-      final boolean firstWriteHandle =
-          newDb.isWritable() && (newDb.getDbImpl().noteWriteHandleOpen() == 1);
-
-      if (dbCreated || firstWriteHandle) {
-        TriggerManager.runOpenTriggers(locker, newDb, dbCreated);
-      }
-    } finally {
-
-      /*
-       * If the open fails, decrement the DB usage count, release
-       * handle locks and remove references from other objects.  In other
-       * cases this is done by Database.close() or invalidate(), the
-       * latter in the case of a user txn abort.
-       */
-      if (!operationOk) {
-        envImpl.getDbTree().releaseDb(database);
-        if (handleLocker != null) {
-          handleLocker.operationEnd(false);
-        }
-        newDb.removeReferringAssociations();
-      }
-
-      /*
-       * Tell the locker that this operation is over. Some types of
-       * lockers (BasicLocker and auto Txn) will actually finish.
-       */
-      locker.operationEnd(operationOk);
-    }
+//    boolean operationOk = false;
+//    HandleLocker handleLocker = null;
+//    final Locker locker =
+//        LockerFactory.getWritableLocker(
+//            this, txn, isInternalDb, dbConfig.getTransactional(), autoTxnIsReplicated, null);
+//    try {
+//
+//      /*
+//       * Create the handle locker and lock the NameLN of an existing
+//       * database.  A read lock on the NameLN is acquired for both locker
+//       * and handleLocker.  Note: getDb may return a deleted database.
+//       */
+//      handleLocker = newDb.initHandleLocker(envImpl, locker);
+//      database = envImpl.getDbTree().getDb(locker, databaseName, handleLocker, false);
+//
+//      boolean dbCreated = false;
+//      final boolean databaseExists = (database != null) && !database.isDeleted();
+//
+//      if (databaseExists) {
+//        if (dbConfig.getAllowCreate() && dbConfig.getExclusiveCreate()) {
+//          throw new DatabaseExistsException("Database " + databaseName + " already exists");
+//        }
+//
+//        newDb.initExisting(this, locker, database, databaseName, dbConfig);
+//      } else {
+//        /* Release deleted DB. [#13415] */
+//        envImpl.getDbTree().releaseDb(database);
+//        database = null;
+//
+//        if (!isInternalDb && DbTree.isReservedDbName(databaseName)) {
+//          throw new IllegalArgumentException(databaseName + " is a reserved database name.");
+//        }
+//
+//        if (!dbConfig.getAllowCreate()) {
+//          throw new DatabaseNotFoundException("Database " + databaseName + " not found.");
+//        }
+//
+//        /*
+//         * Init a new DB. This calls DbTree.createDb and the new
+//         * database is returned.  A write lock on the NameLN is
+//         * acquired by locker and a read lock by the handleLocker.
+//         */
+        database = newDb.initNew(this, /*locker*/null, databaseName, dbConfig);
+//        dbCreated = true;
+//      }
+//
+//      /*
+//       * The open is successful.  We add the opened database handle to
+//       * this environment to track open handles in general, and to the
+//       * locker so that it can be invalidated by a user txn abort.
+//       */
+//      operationOk = true;
+//      addReferringHandle(newDb);
+//      locker.addOpenedDatabase(newDb);
+//
+//      /* Run triggers before any subsequent auto commits. */
+//      final boolean firstWriteHandle =
+//          newDb.isWritable() && (newDb.getDbImpl().noteWriteHandleOpen() == 1);
+//
+//      if (dbCreated || firstWriteHandle) {
+//        TriggerManager.runOpenTriggers(locker, newDb, dbCreated);
+//      }
+//    } finally {
+//
+//      /*
+//       * If the open fails, decrement the DB usage count, release
+//       * handle locks and remove references from other objects.  In other
+//       * cases this is done by Database.close() or invalidate(), the
+//       * latter in the case of a user txn abort.
+//       */
+//      if (!operationOk) {
+//        envImpl.getDbTree().releaseDb(database);
+//        if (handleLocker != null) {
+//          handleLocker.operationEnd(false);
+//        }
+//        newDb.removeReferringAssociations();
+//      }
+//
+//      /*
+//       * Tell the locker that this operation is over. Some types of
+//       * lockers (BasicLocker and auto Txn) will actually finish.
+//       */
+//      locker.operationEnd(operationOk);
+//    }
   }
 
   /** @throws IllegalArgumentException via openDatabase and openSecondaryDatabase */

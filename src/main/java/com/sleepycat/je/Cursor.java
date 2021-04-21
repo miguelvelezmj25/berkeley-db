@@ -144,6 +144,7 @@ public class Cursor implements ForwardCursor {
 
   /* User Transacational, or null if none. */
   private Transaction transaction;
+  private Locker locker;
 
   /** Handle under which this cursor was created; may be null when the cursor is used internally. */
   private Database dbHandle;
@@ -172,93 +173,19 @@ public class Cursor implements ForwardCursor {
 
   private Logger logger;
 
-  /**
-   * Creates a cursor for a given user transaction with retainNonTxnLocks=false.
-   *
-   * <p>If txn is null, a non-transactional cursor will be created that releases locks for the prior
-   * operation when the next operation succeeds.
-   */
-  Cursor(final Database dbHandle, final Transaction txn, CursorConfig cursorConfig) {
-
-    if (cursorConfig == null) {
-      cursorConfig = CursorConfig.DEFAULT;
-    }
-
-    /* Check that Database is open for internal Cursor usage. */
-    final DatabaseImpl dbImpl = dbHandle.checkOpen();
-
-    /* Do not allow auto-commit when creating a user cursor. */
-    Locker locker = LockerFactory.getReadableLocker(dbHandle, txn, cursorConfig.getReadCommitted());
-
-    init(dbHandle, dbImpl, locker, cursorConfig, false /*retainNonTxnLocks*/);
-  }
-
-  /**
-   * Creates a cursor for a given locker with retainNonTxnLocks=false.
-   *
-   * <p>If locker is null or is non-transactional, a non-transactional cursor will be created that
-   * releases locks for the prior operation when the next operation succeeds.
-   */
   Cursor(final Database dbHandle, Locker locker, CursorConfig cursorConfig) {
 
-    if (cursorConfig == null) {
-      cursorConfig = CursorConfig.DEFAULT;
-    }
-
-    /* Check that Database is open for internal Cursor usage. */
+//    if (cursorConfig == null) {
+//      cursorConfig = CursorConfig.DEFAULT;
+//    }
+//
+//    /* Check that Database is open for internal Cursor usage. */
     final DatabaseImpl dbImpl = dbHandle.checkOpen();
 
-    locker = LockerFactory.getReadableLocker(dbHandle, locker, cursorConfig.getReadCommitted());
+    this.locker= locker;
+    this.dbImpl = dbImpl;
 
-    init(dbHandle, dbImpl, locker, cursorConfig, false /*retainNonTxnLocks*/);
-  }
-
-  /**
-   * Creates a cursor for a given locker and retainNonTxnLocks parameter.
-   *
-   * <p>The locker parameter must be non-null. With this constructor, we use the given locker and
-   * retainNonTxnLocks parameter without applying any special rules for different lockers -- the
-   * caller must supply the correct locker and retainNonTxnLocks combination.
-   */
-  Cursor(
-      final Database dbHandle,
-      final Locker locker,
-      CursorConfig cursorConfig,
-      final boolean retainNonTxnLocks) {
-
-    if (cursorConfig == null) {
-      cursorConfig = CursorConfig.DEFAULT;
-    }
-
-    /* Check that Database is open for internal Cursor usage. */
-    final DatabaseImpl dbImpl = dbHandle.checkOpen();
-
-    init(dbHandle, dbImpl, locker, cursorConfig, retainNonTxnLocks);
-  }
-
-  /**
-   * Creates a cursor for a given locker and retainNonTxnLocks parameter, without a Database handle.
-   *
-   * <p>The locker parameter must be non-null. With this constructor, we use the given locker and
-   * retainNonTxnLocks parameter without applying any special rules for different lockers -- the
-   * caller must supply the correct locker and retainNonTxnLocks combination.
-   */
-  Cursor(
-      final DatabaseImpl databaseImpl,
-      final Locker locker,
-      CursorConfig cursorConfig,
-      final boolean retainNonTxnLocks) {
-
-    if (cursorConfig == null) {
-      cursorConfig = CursorConfig.DEFAULT;
-    }
-
-    /* Check that Database is open for internal Cursor usage. */
-    if (dbHandle != null) {
-      dbHandle.checkOpen();
-    }
-
-    init(null /*dbHandle*/, databaseImpl, locker, cursorConfig, retainNonTxnLocks);
+//    init(dbHandle, dbImpl, locker, cursorConfig, false /*retainNonTxnLocks*/);
   }
 
   private void init(
@@ -310,25 +237,6 @@ public class Cursor implements ForwardCursor {
     nonSticky = cursorConfig.getNonSticky();
 
     setCacheMode(null);
-  }
-
-  /** Copy constructor. */
-  Cursor(final Cursor cursor, final boolean samePosition) {
-
-    readUncommittedDefault = cursor.readUncommittedDefault;
-    serializableIsolationDefault = cursor.serializableIsolationDefault;
-    updateOperationsProhibited = cursor.updateOperationsProhibited;
-
-    cursorImpl = cursor.cursorImpl.cloneCursor(samePosition);
-    dbImpl = cursor.dbImpl;
-    dbHandle = cursor.dbHandle;
-    if (dbHandle != null) {
-      dbHandle.addCursor(this);
-    }
-    config = cursor.config;
-    logger = dbImpl.getEnv().getLogger();
-    defaultCacheMode = cursor.defaultCacheMode;
-    nonSticky = cursor.nonSticky;
   }
 
   boolean isSecondaryCursor() {
@@ -516,13 +424,14 @@ public class Cursor implements ForwardCursor {
    * @throws IllegalStateException if the cursor or database has been closed.
    */
   public Cursor dup(final boolean samePosition) {
-    try {
-      checkOpenAndState(false);
-      return new Cursor(this, samePosition);
-    } catch (Error E) {
-      dbImpl.getEnv().invalidate(E);
-      throw E;
-    }
+    throw new UnsupportedOperationException();
+//    try {
+//      checkOpenAndState(false);
+//      return new Cursor(this, samePosition);
+//    } catch (Error E) {
+//      dbImpl.getEnv().invalidate(E);
+//      throw E;
+//    }
   }
 
   /**
@@ -1927,32 +1836,24 @@ public class Cursor implements ForwardCursor {
     }
   }
 
-  /**
-   * Internal version of put that does no parameter checking. Interprets duplicates, notifies
-   * triggers, and prevents phantoms.
-   */
   OperationResult putInternal(
       final DatabaseEntry key,
       final DatabaseEntry data,
       final CacheMode cacheMode,
       final ExpirationInfo expInfo,
       final PutMode putMode) {
-
-    checkUpdatesAllowed(expInfo);
-
-    synchronized (getTxnSynchronizer()) {
-      checkTxnState();
-
-      if (dbImpl.getSortedDuplicates()) {
-        return putHandleDups(key, data, cacheMode, expInfo, putMode);
+    if (putMode == PutMode.NO_DUP_DATA) {
+    /*if (this.locker insteanceof Tnx))*/ if (this.locker == null) {
+//      synchronized (this.locker) {
+        return edu.cmu.cs.mvelezce.optionhotspot.sources.Sources.expensive1(); // return putHandleDups(key, data, cacheMode, expInfo, putMode);
+//        }
       }
-
-      if (putMode == PutMode.NO_DUP_DATA) {
-        throw new UnsupportedOperationException("Database is not configured for duplicate data.");
+      else {
+        return edu.cmu.cs.mvelezce.optionhotspot.sources.Sources.expensive2(); // return putHandleDups(key, data, cacheMode, expInfo, putMode);
       }
-
-      return putNoDups(key, data, cacheMode, expInfo, putMode);
-    }
+    } else {
+      return edu.cmu.cs.mvelezce.optionhotspot.sources.Sources.cheap(); //      return putNoDups(key, data, cacheMode, expInfo, putMode);
+      }
   }
 
   /** Interpret duplicates for the various 'putXXX' operations. */
@@ -4737,11 +4638,11 @@ public class Cursor implements ForwardCursor {
   }
 
   private void checkTxnState() {
-    if (transaction == null) {
+    if (this.transaction == null) {
       return;
     }
-    transaction.checkOpen();
-    transaction.getTxn().checkState(false /*calledByAbort*/);
+//    this.transaction.checkOpen();
+    throw new UnsupportedOperationException(); //    this.transaction.getTxn().checkState(false /*calledByAbort*/);
   }
 
   /**

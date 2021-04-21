@@ -1237,7 +1237,7 @@ public class PersistCatalog implements Catalog {
     }
     DatabaseEntry key = new DatabaseEntry(DATA_KEY);
     DatabaseEntry data = new DatabaseEntry(baos.toByteArray());
-    db.put(txn, key, data);
+//    db.put(txn, key, data);
 
     /*
      * Delete the unused beta mutations record if we read the beta version

@@ -67,15 +67,15 @@ public class SecondaryCursor extends Cursor {
 
   private final SecondaryDatabase secondaryDb;
 
-  /**
-   * Cursor constructor. Not public. To get a cursor, the user should call
-   * SecondaryDatabase.cursor();
-   */
-  SecondaryCursor(
-      final SecondaryDatabase dbHandle, final Transaction txn, final CursorConfig cursorConfig) {
-    super(dbHandle, txn, cursorConfig);
-    secondaryDb = dbHandle;
-  }
+//  /**
+//   * Cursor constructor. Not public. To get a cursor, the user should call
+//   * SecondaryDatabase.cursor();
+//   */
+//  SecondaryCursor(
+//      final SecondaryDatabase dbHandle, final Transaction txn, final CursorConfig cursorConfig) {
+//    super(dbHandle, txn, cursorConfig);
+//    secondaryDb = dbHandle;
+//  }
 
   /**
    * Cursor constructor. Not public. To get a cursor, the user should call
@@ -87,11 +87,11 @@ public class SecondaryCursor extends Cursor {
     secondaryDb = dbHandle;
   }
 
-  /** Copy constructor. */
-  private SecondaryCursor(final SecondaryCursor cursor, final boolean samePosition) {
-    super(cursor, samePosition);
-    secondaryDb = cursor.secondaryDb;
-  }
+//  /** Copy constructor. */
+//  private SecondaryCursor(final SecondaryCursor cursor, final boolean samePosition) {
+//    super(cursor, samePosition);
+//    secondaryDb = cursor.secondaryDb;
+//  }
 
   boolean isSecondaryCursor() {
     return true;
@@ -133,15 +133,15 @@ public class SecondaryCursor extends Cursor {
     return secondaryDb.getPrimaryDatabase();
   }
 
-  /**
-   * Returns a new <code>SecondaryCursor</code> for the same transaction as the original cursor.
-   * <!-- inherit other javadoc from overridden method -->
-   */
-  @Override
-  public SecondaryCursor dup(final boolean samePosition) {
-    checkOpenAndState(false);
-    return new SecondaryCursor(this, samePosition);
-  }
+//  /**
+//   * Returns a new <code>SecondaryCursor</code> for the same transaction as the original cursor.
+//   * <!-- inherit other javadoc from overridden method -->
+//   */
+//  @Override
+//  public SecondaryCursor dup(final boolean samePosition) {
+//    checkOpenAndState(false);
+//    return new SecondaryCursor(this, samePosition);
+//  }
 
   /**
    * Returns a new copy of the cursor as a <code>SecondaryCursor</code>.
@@ -153,7 +153,7 @@ public class SecondaryCursor extends Cursor {
    * @deprecated As of JE 4.0.13, replaced by {@link Cursor#dup}.
    */
   public SecondaryCursor dupSecondary(final boolean samePosition) {
-    return dup(samePosition);
+    throw new UnsupportedOperationException();//    return dup(samePosition);
   }
 
   /**

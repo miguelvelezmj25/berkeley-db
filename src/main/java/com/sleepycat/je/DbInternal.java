@@ -395,10 +395,11 @@ public class DbInternal {
       final Locker locker,
       final CursorConfig cursorConfig,
       boolean retainNonTxnLocks) {
-    final Cursor cursor = new Cursor(databaseImpl, locker, cursorConfig, retainNonTxnLocks);
-    /* Internal cursors don't need to be sticky. */
-    cursor.setNonSticky(true);
-    return cursor;
+    throw new UnsupportedOperationException();
+//    final Cursor cursor = new Cursor(databaseImpl, locker, cursorConfig, retainNonTxnLocks);
+//    /* Internal cursors don't need to be sticky. */
+//    cursor.setNonSticky(true);
+//    return cursor;
   }
 
   /** Create a Cursor from a DatabaseHandle. */
@@ -412,7 +413,8 @@ public class DbInternal {
       final Locker locker,
       final CursorConfig cursorConfig,
       boolean retainNonTxnLocks) {
-    return new Cursor(dbHandle, locker, cursorConfig, retainNonTxnLocks);
+    throw new UnsupportedOperationException();
+//    return new Cursor(dbHandle, locker, cursorConfig, retainNonTxnLocks);
   }
 
   /** @deprecated use {@link CursorConfig#setNonSticky} instead. */

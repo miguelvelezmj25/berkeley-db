@@ -499,7 +499,7 @@ public class DbLoad {
           }
         }
       } else {
-        db.put(null, key, data);
+//        db.put(null, key, data);
       }
 
       count++;

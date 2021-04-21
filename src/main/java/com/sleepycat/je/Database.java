@@ -150,15 +150,15 @@ public class Database implements Closeable {
    */
   Collection<SecondaryDatabase> foreignKeySecondaries;
 
-  final Logger logger;
+  /*final*/ Logger logger;
 
   /**
    * Creates a database but does not open or fully initialize it. Is protected for use in compat
    * package.
    */
   Database(final Environment env) {
-    this.envHandle = env;
-    logger = getEnv().getLogger();
+//    this.envHandle = env;
+//    logger = getEnv().getLogger();
   }
 
   /** Creates a database, called by Environment. */
@@ -168,14 +168,14 @@ public class Database implements Closeable {
       final String databaseName,
       final DatabaseConfig dbConfig) {
 
-    dbConfig.validateForNewDb();
+//    dbConfig.validateForNewDb();
 
-    init(env, dbConfig);
+//    init(env, dbConfig);
 
     /* Make the databaseImpl. */
-    databaseImpl = getEnv().getDbTree().createDb(locker, databaseName, dbConfig, handleLocker);
-    databaseImpl.addReferringHandle(this);
-    return databaseImpl;
+    this.databaseImpl = new DatabaseImpl(locker, databaseName, /*newId*/null, null, dbConfig);/*getEnv().getDbTree()*//*new DbTree().createDb(locker, databaseName, dbConfig, handleLocker);*/
+//    this.databaseImpl.addReferringHandle(this);
+    return this.databaseImpl;
   }
 
   /** Opens a database, called by Environment. */
@@ -909,7 +909,7 @@ public class Database implements Closeable {
 
   /** Is overridden by SecondaryDatabase. */
   Cursor newDbcInstance(final Transaction txn, final CursorConfig cursorConfig) {
-    return new Cursor(this, txn, cursorConfig);
+    throw new UnsupportedOperationException();//    return new Cursor(this, txn, cursorConfig);
   }
 
   /**
@@ -1311,74 +1311,6 @@ public class Database implements Closeable {
     return result == null ? OperationStatus.NOTFOUND : OperationStatus.SUCCESS;
   }
 
-  /**
-   * Inserts or updates a record according to the specified {@link Put} type.
-   *
-   * <p>If the operation succeeds, the record will be locked according to the {@link
-   * ReadOptions#getLockMode() lock mode} specified, the cursor will be positioned on the record,
-   * and a non-null OperationResult will be returned. If the operation fails because the record
-   * already exists (or does not exist, depending on the putType), null is returned.
-   *
-   * <p>When the database has associated secondary databases, this method also inserts or deletes
-   * associated index records as necessary.
-   *
-   * <p>The following table lists each allowed operation. See the individual {@link Put} operations
-   * for more information. <div>
-   *
-   * <table border="1" summary="">
-   * <tr>
-   *     <th>Put operation</th>
-   *     <th>Description</th>
-   *     <th>Returns null when?</th>
-   *     <th>Other special rules</th>
-   * </tr>
-   * <tr>
-   *     <td>{@link Put#OVERWRITE}</td>
-   *     <td>Inserts or updates a record depending on whether a matching
-   *     record is already present.</td>
-   *     <td>Never returns null.</td>
-   *     <td>Without duplicates, a matching record is one with the same key;
-   *     with duplicates, it is one with the same key and data.</td>
-   * </tr>
-   * <tr>
-   *     <td>{@link Put#NO_OVERWRITE}</td>
-   *     <td>Inserts a record if a record with a matching key is not already
-   *     present.</td>
-   *     <td>When an existing record matches.</td>
-   *     <td>If the database has duplicate keys, a record is inserted only if
-   *     there are no records with a matching key.</td>
-   * </tr>
-   * <tr>
-   *     <td>{@link Put#NO_DUP_DATA}</td>
-   *     <td>Inserts a record in a database with duplicate keys if a record
-   *     with a matching key and data is not already present.</td>
-   *     <td>When an existing record matches.</td>
-   *     <td>Without duplicates, this operation is not allowed.</td>
-   * </tr>
-   * </table>
-   *
-   * </div>
-   *
-   * @param txn For a transactional database, an explicit transaction may be specified, or null may
-   *     be specified to use auto-commit. For a non-transactional database, null must be specified.
-   * @param key the key used as <a href="DatabaseEntry.html#inParam">input</a>.
-   * @param data the data used as <a href="DatabaseEntry.html#inParam">input</a>.
-   * @param putType the Put operation type. May not be null.
-   * @param options the WriteOptions, or null to use default options.
-   * @return the OperationResult if the record is written, else null.
-   * @throws OperationFailureException if one of the <a
-   *     href="../je/OperationFailureException.html#writeFailures">Write Operation Failures</a>
-   *     occurs.
-   * @throws EnvironmentFailureException if an unexpected, internal or environment-wide failure
-   *     occurs.
-   * @throws UnsupportedOperationException if the database is read-only, or putType is
-   *     Put.NO_DUP_DATA and the database is not configured for duplicates.
-   * @throws IllegalStateException if the database has been closed.
-   * @throws IllegalArgumentException if an invalid parameter is specified. This includes passing a
-   *     null putType, a null input key/data parameter, an input key/data parameter with a null data
-   *     array, a partial key/data input parameter, or when putType is Put.CURRENT.
-   * @since 7.0
-   */
   public OperationResult put(
       final Transaction txn,
       final DatabaseEntry key,
@@ -1386,98 +1318,42 @@ public class Database implements Closeable {
       final Put putType,
       final WriteOptions options) {
 
-    try {
-      checkEnv();
+//    try {
+//      checkEnv();
       final DatabaseImpl dbImpl = checkOpen();
 
-      if (putType == Put.CURRENT) {
-        throw new IllegalArgumentException("putType may not be Put.CURRENT");
-      }
+//      if (putType == Put.CURRENT) {
+//        throw new IllegalArgumentException("putType may not be Put.CURRENT");
+//      }
 
       OperationResult result = null;
 
-      trace(Level.FINEST, "Database.put", String.valueOf(putType), txn, key, data, null);
+//      trace(Level.FINEST, "Database.put", String.valueOf(putType), txn, key, data, null);
 
       final Locker locker =
           LockerFactory.getWritableLocker(
-              envHandle,
+              /*envHandle*/null,
               txn,
-              dbImpl.isInternalDb(),
-              isTransactional(),
-              dbImpl.isReplicated()); // autoTxnIsReplicated
+              /*dbImpl.isInternalDb()*/false,
+              dbImpl.isTransactional(),
+              /*dbImpl.isReplicated()*/false, null); // autoTxnIsReplicated
 
-      try {
+//      try {
         try (final Cursor cursor = new Cursor(this, locker, DEFAULT_CURSOR_CONFIG)) {
 
-          result = cursor.putInternal(key, data, putType, options);
+          result = cursor.putInternal(key, data, options.getCacheMode(), ExpirationInfo.getInfo(options), putType.getPutMode());//          result = cursor.putInternal(key, data, putType, options);
         }
-      } finally {
-        locker.operationEnd(result != null);
-      }
+//      } finally {
+//        locker.operationEnd(result != null);
+//      }
 
       return result;
-    } catch (Error E) {
-      envHandle.invalidate(E);
-      throw E;
-    }
+//    } catch (Error E) {
+//      envHandle.invalidate(E);
+//      throw E;
+//    }
   }
 
-  /**
-   * Stores the key/data pair into the database.
-   *
-   * <p>Calling this method is equivalent to calling {@link #put(Transaction, DatabaseEntry,
-   * DatabaseEntry, Put, WriteOptions)} with {@link Put#OVERWRITE}.
-   *
-   * <p>If the key already appears in the database and duplicates are not configured, the data
-   * associated with the key will be replaced. If the key already appears in the database and sorted
-   * duplicates are configured, the new data value is inserted at the correct sorted location.
-   *
-   * @param txn For a transactional database, an explicit transaction may be specified, or null may
-   *     be specified to use auto-commit. For a non-transactional database, null must be specified.
-   * @param key the key used as <a href="DatabaseEntry.html#inParam">input</a>..
-   * @param data the data used as <a href="DatabaseEntry.html#inParam">input</a>.
-   * @return {@link com.sleepycat.je.OperationStatus#SUCCESS OperationStatus.SUCCESS}.
-   * @throws OperationFailureException if one of the <a
-   *     href="../je/OperationFailureException.html#writeFailures">Write Operation Failures</a>
-   *     occurs.
-   * @throws EnvironmentFailureException if an unexpected, internal or environment-wide failure
-   *     occurs.
-   * @throws UnsupportedOperationException if this database is read-only.
-   * @throws IllegalStateException if the database has been closed.
-   */
-  public OperationStatus put(
-      final Transaction txn, final DatabaseEntry key, final DatabaseEntry data) {
-    final OperationResult result = put(txn, key, data, Put.OVERWRITE, null);
-
-    EnvironmentFailureException.assertState(result != null);
-    return OperationStatus.SUCCESS;
-  }
-
-  /**
-   * Stores the key/data pair into the database if the key does not already appear in the database.
-   *
-   * <p>Calling this method is equivalent to calling {@link #put(Transaction, DatabaseEntry,
-   * DatabaseEntry, Put, WriteOptions)} with {@link Put#NO_OVERWRITE}.
-   *
-   * <p>This method will return {@link com.sleepycat.je.OperationStatus#KEYEXIST
-   * OpeationStatus.KEYEXIST} if the key already exists in the database, even if the database
-   * supports duplicates.
-   *
-   * @param txn For a transactional database, an explicit transaction may be specified, or null may
-   *     be specified to use auto-commit. For a non-transactional database, null must be specified.
-   * @param key the key used as <a href="DatabaseEntry.html#inParam">input</a>..
-   * @param data the data used as <a href="DatabaseEntry.html#inParam">input</a>.
-   * @return {@link com.sleepycat.je.OperationStatus#KEYEXIST OperationStatus.KEYEXIST} if the key
-   *     already appears in the database, else {@link com.sleepycat.je.OperationStatus#SUCCESS
-   *     OperationStatus.SUCCESS}
-   * @throws OperationFailureException if one of the <a
-   *     href="../je/OperationFailureException.html#writeFailures">Write Operation Failures</a>
-   *     occurs.
-   * @throws EnvironmentFailureException if an unexpected, internal or environment-wide failure
-   *     occurs.
-   * @throws UnsupportedOperationException if this database is read-only.
-   * @throws IllegalStateException if the database has been closed.
-   */
   public OperationStatus putNoOverwrite(
       final Transaction txn, final DatabaseEntry key, final DatabaseEntry data) {
     final OperationResult result = put(txn, key, data, Put.NO_OVERWRITE, null);
@@ -1485,31 +1361,6 @@ public class Database implements Closeable {
     return result == null ? OperationStatus.KEYEXIST : OperationStatus.SUCCESS;
   }
 
-  /**
-   * Stores the key/data pair into the database if it does not already appear in the database.
-   *
-   * <p>Calling this method is equivalent to calling {@link #put(Transaction, DatabaseEntry,
-   * DatabaseEntry, Put, WriteOptions)} with {@link Put#NO_DUP_DATA}.
-   *
-   * <p>This method may only be called if the underlying database has been configured to support
-   * sorted duplicates.
-   *
-   * @param txn For a transactional database, an explicit transaction may be specified, or null may
-   *     be specified to use auto-commit. For a non-transactional database, null must be specified.
-   * @param key the key used as <a href="DatabaseEntry.html#inParam">input</a>..
-   * @param data the data used as <a href="DatabaseEntry.html#inParam">input</a>.
-   * @return {@link com.sleepycat.je.OperationStatus#KEYEXIST OperationStatus.KEYEXIST} if the
-   *     key/data pair already appears in the database, else {@link
-   *     com.sleepycat.je.OperationStatus#SUCCESS OperationStatus.SUCCESS}
-   * @throws OperationFailureException if one of the <a
-   *     href="../je/OperationFailureException.html#writeFailures">Write Operation Failures</a>
-   *     occurs.
-   * @throws EnvironmentFailureException if an unexpected, internal or environment-wide failure
-   *     occurs.
-   * @throws UnsupportedOperationException if this database is not configured for duplicates, or
-   *     this database is read-only.
-   * @throws IllegalStateException if the database has been closed.
-   */
   public OperationStatus putNoDupData(
       final Transaction txn, final DatabaseEntry key, final DatabaseEntry data) {
     final OperationResult result = put(txn, key, data, Put.NO_DUP_DATA, null);
@@ -2015,21 +1866,21 @@ public class Database implements Closeable {
   }
 
   DatabaseImpl checkOpen() {
-    switch (state) {
-      case OPEN:
+//    switch (state) {
+//      case OPEN:
         return databaseImpl;
-      case CLOSED:
-        throw new IllegalStateException("Database was closed.");
-      case INVALID:
-        throw new IllegalStateException("The Transaction used to open the Database was aborted.");
-      case PREEMPTED:
-        throw preemptedCause.wrapSelf(preemptedCause.getMessage());
-      case CORRUPTED:
-        throw corruptedCause.wrapSelf(corruptedCause.getMessage());
-      default:
-        assert false : state;
-        return null;
-    }
+//      case CLOSED:
+//        throw new IllegalStateException("Database was closed.");
+//      case INVALID:
+//        throw new IllegalStateException("The Transaction used to open the Database was aborted.");
+//      case PREEMPTED:
+//        throw preemptedCause.wrapSelf(preemptedCause.getMessage());
+//      case CORRUPTED:
+//        throw corruptedCause.wrapSelf(corruptedCause.getMessage());
+//      default:
+//        assert false : state;
+//        return null;
+//    }
   }
 
   /**

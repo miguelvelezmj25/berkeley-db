@@ -585,7 +585,7 @@ public class SecondaryDatabase extends Database {
   /** Overrides Database method. */
   @Override
   Cursor newDbcInstance(final Transaction txn, final CursorConfig cursorConfig) {
-    return new SecondaryCursor(this, txn, cursorConfig);
+    throw new UnsupportedOperationException();//    return new SecondaryCursor(this, txn, cursorConfig);
   }
 
   /**
@@ -968,7 +968,7 @@ public class SecondaryDatabase extends Database {
    * will always be thrown by this method. The corresponding method on the primary database should
    * be used instead.
    */
-  @Override
+//  @Override
   public OperationStatus put(
       final Transaction txn, final DatabaseEntry key, final DatabaseEntry data) {
     throw notAllowedException();

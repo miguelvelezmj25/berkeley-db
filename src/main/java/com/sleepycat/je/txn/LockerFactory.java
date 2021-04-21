@@ -41,15 +41,6 @@ public class LockerFactory {
         null /*autoCommitConfig*/);
   }
 
-  /**
-   * Get a locker for a write operation.
-   *
-   * @param autoTxnIsReplicated is true if this transaction is executed on a rep group master, and
-   *     needs to be broadcast. Currently, all application-created transactions are of the type
-   *     com.sleepycat.je.txn.Txn, and are replicated if the parent environment is replicated. Auto
-   *     Txns are trickier because they may be created for a local write operation, such as log
-   *     cleaning.
-   */
   public static Locker getWritableLocker(
       final Environment env,
       final Transaction userTxn,
@@ -58,58 +49,58 @@ public class LockerFactory {
       final boolean autoTxnIsReplicated,
       TransactionConfig autoCommitConfig) {
 
-    final EnvironmentImpl envImpl = DbInternal.getNonNullEnvImpl(env);
-    final boolean envIsTransactional = envImpl.isTransactional();
-
-    if (userTxn == null) {
-      final Transaction xaLocker = env.getThreadTransaction();
-      if (xaLocker != null) {
-        return DbInternal.getLocker(xaLocker);
-      }
-    }
+//    final EnvironmentImpl envImpl = DbInternal.getNonNullEnvImpl(env);
+//    final boolean envIsTransactional = envImpl.isTransactional();
+//
+//    if (userTxn == null) {
+//      final Transaction xaLocker = env.getThreadTransaction();
+//      if (xaLocker != null) {
+//        return DbInternal.getLocker(xaLocker);
+//      }
+//    }
 
     if (dbIsTransactional && userTxn == null) {
 
-      if (autoCommitConfig == null) {
-        autoCommitConfig = DbInternal.getDefaultTxnConfig(env);
-      }
+//      if (autoCommitConfig == null) {
+//        autoCommitConfig = DbInternal.getDefaultTxnConfig(env);
+//      }
 
       return Txn.createAutoTxn(
-          envImpl,
+          /*envImpl*/null,
           autoCommitConfig,
           (autoTxnIsReplicated ? ReplicationContext.MASTER : ReplicationContext.NO_REPLICATE));
     }
 
     if (userTxn == null) {
       /* Non-transactional user operations use ThreadLocker. */
-      return ThreadLocker.createThreadLocker(envImpl, autoTxnIsReplicated);
+      return ThreadLocker.createThreadLocker(/*envImpl*/null, autoTxnIsReplicated);
     }
 
-    /*
-     * The user provided a transaction, so the environment and the
-     * database had better be opened transactionally.
-     */
-    if (!isInternalDb && !envIsTransactional) {
-      throw new IllegalArgumentException(
-          "A Transaction cannot be used because the"
-              + " environment was opened non-transactionally");
-    }
-    if (!dbIsTransactional) {
-      throw new IllegalArgumentException(
-          "A Transaction cannot be used because the" + " database was opened non-transactionally");
-    }
-
-    /*
-     * Use the locker for the given transaction.  For read-committed,
-     * wrap the given transactional locker in a special locker for that
-     * isolation level.
-     */
-    final Locker locker = DbInternal.getLocker(userTxn);
-    if (locker.isReadCommittedIsolation()) {
-      return ReadCommittedLocker.createReadCommittedLocker(envImpl, locker);
-    }
-
-    return locker;
+//    /*
+//     * The user provided a transaction, so the environment and the
+//     * database had better be opened transactionally.
+//     */
+//    if (!isInternalDb && !envIsTransactional) {
+//      throw new IllegalArgumentException(
+//          "A Transaction cannot be used because the"
+//              + " environment was opened non-transactionally");
+//    }
+//    if (!dbIsTransactional) {
+//      throw new IllegalArgumentException(
+//          "A Transaction cannot be used because the" + " database was opened non-transactionally");
+//    }
+//
+//    /*
+//     * Use the locker for the given transaction.  For read-committed,
+//     * wrap the given transactional locker in a special locker for that
+//     * isolation level.
+//     */
+//    final Locker locker = DbInternal.getLocker(userTxn);
+//    if (locker.isReadCommittedIsolation()) {
+//      return ReadCommittedLocker.createReadCommittedLocker(envImpl, locker);
+//    }
+//
+throw new UnsupportedOperationException();//    return locker;
   }
 
   /** Get a locker for a read or cursor operation. */
