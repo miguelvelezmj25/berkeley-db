@@ -65,23 +65,23 @@ public class MeasureDiskOrderedScan {
   }
 
   public static void main(String[] args) throws IOException {
-    ADLER32_CHUNK_SIZE = EnvironmentParams.ADLER32_CHUNK_SIZE.getDefault();
+    ADLER32_CHUNK_SIZE = "1000";
     CACHE_MODE = CacheMode.EVICT_LN;
-    CHECKPOINTER_BYTES_INTERVAL = EnvironmentParams.CHECKPOINTER_BYTES_INTERVAL.getDefault();
-    DUPLICATES = false;
-    ENV_BACKGROUND_READ_LIMIT = EnvironmentParams.ENV_BACKGROUND_READ_LIMIT.getDefault();
+    CHECKPOINTER_BYTES_INTERVAL = "20000000";
+    DUPLICATES = true;
+    ENV_BACKGROUND_READ_LIMIT = "0";
     ENV_IS_LOCKING = true;
-    ENV_SHARED_CACHE = false;
-    JE_DURABILITY = Durability.COMMIT_NO_SYNC;
-    JE_FILE_LEVEL = "OFF";
-    LOCK_DEADLOCK_DETECT = false;
-    LOCK_DEADLOCK_DETECT_DELAY = EnvironmentParams.LOCK_DEADLOCK_DETECT_DELAY.getDefault();
-    MAX_MEMORY = 1000L * 1000;
+    ENV_SHARED_CACHE = true;
+    JE_DURABILITY = Durability.COMMIT_WRITE_NO_SYNC;
+    JE_FILE_LEVEL = "INFO";
+    LOCK_DEADLOCK_DETECT = true;
+    LOCK_DEADLOCK_DETECT_DELAY = "10 sec";
+    MAX_MEMORY = 1000000;
     REPLICATED = false;
     SEQUENTIAL = false;
-    TEMPORARY = false;
-    TRANSACTIONS = false;
-    TXN_SERIALIZABLE_ISOLATION = false;
+    TEMPORARY = true;
+    TRANSACTIONS = true;
+    TXN_SERIALIZABLE_ISOLATION = true;
 
     File output = new File("./tmp");
     FileUtils.forceDelete(output);
