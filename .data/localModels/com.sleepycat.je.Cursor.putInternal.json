@@ -1,0 +1,212 @@
+{
+  "models": [
+    {
+      "terms": [
+        {
+          "options": [],
+          "time": 4.74
+        },
+        {
+          "options": [
+            {
+              "from": "false",
+              "to": "true",
+              "option": "DUPLICATES"
+            },
+            {
+              "from": "false",
+              "to": "true",
+              "option": "TRANSACTIONS"
+            }
+          ],
+          "time": 54.23
+        },
+        {
+          "options": [
+            {
+              "from": "false",
+              "to": "true",
+              "option": "TEMPORARY"
+            }
+          ],
+          "time": -2.22
+        },
+        {
+          "options": [
+            {
+              "from": "false",
+              "to": "true",
+              "option": "DUPLICATES"
+            }
+          ],
+          "time": 8.89
+        },
+        {
+          "options": [
+            {
+              "from": "false",
+              "to": "true",
+              "option": "TEMPORARY"
+            },
+            {
+              "from": "false",
+              "to": "true",
+              "option": "SEQUENTIAL"
+            }
+          ],
+          "time": 3.4800000000000004
+        },
+        {
+          "options": [
+            {
+              "from": "false",
+              "to": "true",
+              "option": "SEQUENTIAL"
+            }
+          ],
+          "time": 1.7599999999999998
+        }
+      ],
+      "name": "default"
+    },
+    {
+      "terms": [
+        {
+          "options": [
+            {
+              "from": "true",
+              "to": "false",
+              "option": "DUPLICATES"
+            },
+            {
+              "from": "true",
+              "to": "false",
+              "option": "TRANSACTIONS"
+            }
+          ],
+          "time": 54.23
+        },
+        {
+          "options": [
+            {
+              "from": "false",
+              "to": "true",
+              "option": "SEQUENTIAL"
+            },
+            {
+              "from": "true",
+              "to": "false",
+              "option": "TRANSACTIONS"
+            }
+          ],
+          "time": -7.105427357601002E-15
+        },
+        {
+          "options": [
+            {
+              "from": "false",
+              "to": "true",
+              "option": "SEQUENTIAL"
+            }
+          ],
+          "time": 1.7600000000000051
+        },
+        {
+          "options": [
+            {
+              "from": "false",
+              "to": "true",
+              "option": "TEMPORARY"
+            },
+            {
+              "from": "true",
+              "to": "false",
+              "option": "TRANSACTIONS"
+            }
+          ],
+          "time": -7.105427357601002E-15
+        },
+        {
+          "options": [],
+          "time": 67.86
+        },
+        {
+          "options": [
+            {
+              "from": "false",
+              "to": "true",
+              "option": "TEMPORARY"
+            },
+            {
+              "from": "true",
+              "to": "false",
+              "option": "DUPLICATES"
+            }
+          ],
+          "time": -7.105427357601002E-15
+        },
+        {
+          "options": [
+            {
+              "from": "false",
+              "to": "true",
+              "option": "TEMPORARY"
+            }
+          ],
+          "time": -2.219999999999999
+        },
+        {
+          "options": [
+            {
+              "from": "false",
+              "to": "true",
+              "option": "TEMPORARY"
+            },
+            {
+              "from": "false",
+              "to": "true",
+              "option": "SEQUENTIAL"
+            }
+          ],
+          "time": 3.4799999999999898
+        },
+        {
+          "options": [
+            {
+              "from": "true",
+              "to": "false",
+              "option": "TRANSACTIONS"
+            }
+          ],
+          "time": -54.23
+        },
+        {
+          "options": [
+            {
+              "from": "true",
+              "to": "false",
+              "option": "DUPLICATES"
+            }
+          ],
+          "time": -63.12
+        },
+        {
+          "options": [
+            {
+              "from": "true",
+              "to": "false",
+              "option": "DUPLICATES"
+            },
+            {
+              "from": "false",
+              "to": "true",
+              "option": "SEQUENTIAL"
+            }
+          ],
+          "time": -7.105427357601002E-15
+        }
+      ],
+      "name": "user"
+    }
+  ]
+}

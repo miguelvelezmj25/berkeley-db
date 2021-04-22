@@ -34,7 +34,7 @@ public class LockerFactory {
 
     return getWritableLocker(
         env,
-        userTxn,
+        /*userTxn,*/
         isInternalDb,
         dbIsTransactional,
         autoTxnIsReplicated,
@@ -43,7 +43,6 @@ public class LockerFactory {
 
   public static Locker getWritableLocker(
       final Environment env,
-      final Transaction userTxn,
       final boolean isInternalDb,
       final boolean dbIsTransactional,
       final boolean autoTxnIsReplicated,
@@ -59,7 +58,7 @@ public class LockerFactory {
 //      }
 //    }
 
-    if (dbIsTransactional && userTxn == null) {
+    if (dbIsTransactional) {
 
 //      if (autoCommitConfig == null) {
 //        autoCommitConfig = DbInternal.getDefaultTxnConfig(env);
@@ -71,7 +70,7 @@ public class LockerFactory {
           (autoTxnIsReplicated ? ReplicationContext.MASTER : ReplicationContext.NO_REPLICATE));
     }
 
-    if (userTxn == null) {
+    if (isInternalDb) {
       /* Non-transactional user operations use ThreadLocker. */
       return ThreadLocker.createThreadLocker(/*envImpl*/null, autoTxnIsReplicated);
     }

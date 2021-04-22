@@ -276,6 +276,13 @@ try {//    File output = new File("./tmp");
   }
 
   private void populate() {
+    Put putType;
+    if(this.dupDb) {
+      putType = Put.NO_OVERWRITE;
+    }
+    else {
+      putType = Put.NO_DUP_DATA;
+    }
     final DatabaseEntry key = new DatabaseEntry();
     final DatabaseEntry data = new DatabaseEntry();
     for (long i = 0; i < nRecords; i += 1) {
@@ -288,9 +295,9 @@ try {//    File output = new File("./tmp");
       OperationStatus status;
       /* Insert */
       if (dupDb) {
-        status = db.putNoDupData(null, key, data);
+        status = db.putNoDupData(key, putType, data);
       } else {
-        status = db.putNoOverwrite(null, key, data);
+        status = db.putNoOverwrite(key, putType, data);
       }
 //      if (status != OperationStatus.SUCCESS) {
 //        fail(status);

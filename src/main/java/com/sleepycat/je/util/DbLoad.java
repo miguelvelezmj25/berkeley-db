@@ -492,7 +492,7 @@ public class DbLoad {
       DatabaseEntry data = new DatabaseEntry(dataBytes);
 
       if (noOverwrite) {
-        if (db.putNoOverwrite(null, key, data) == OperationStatus.KEYEXIST) {
+        if (db.putNoOverwrite(/*null,*/ key, Put.NO_OVERWRITE, data) == OperationStatus.KEYEXIST) {
           /* Calling println is OK only from command line. */
           if (commandLine) {
             System.err.println("Key exists: " + key);

@@ -145,6 +145,7 @@ public class Cursor implements ForwardCursor {
   /* User Transacational, or null if none. */
   private Transaction transaction;
   private Locker locker;
+  private PutMode putMode;
 
   /** Handle under which this cursor was created; may be null when the cursor is used internally. */
   private Database dbHandle;
@@ -173,16 +174,17 @@ public class Cursor implements ForwardCursor {
 
   private Logger logger;
 
-  Cursor(final Database dbHandle, Locker locker, CursorConfig cursorConfig) {
+  Cursor(final Database dbHandle, Locker locker, PutMode putMode, CursorConfig cursorConfig) {
 
 //    if (cursorConfig == null) {
 //      cursorConfig = CursorConfig.DEFAULT;
 //    }
 //
 //    /* Check that Database is open for internal Cursor usage. */
-    final DatabaseImpl dbImpl = dbHandle.checkOpen();
+    final DatabaseImpl dbImpl = dbHandle.getDatabaseImpl();
 
-    this.locker= locker;
+    this.locker = locker;
+    this.putMode = putMode;
     this.dbImpl = dbImpl;
 
 //    init(dbHandle, dbImpl, locker, cursorConfig, false /*retainNonTxnLocks*/);
@@ -633,7 +635,7 @@ public class Cursor implements ForwardCursor {
     }
 
     return putInternal(
-        key, data, options.getCacheMode(), ExpirationInfo.getInfo(options), putType.getPutMode());
+        key, data, options.getCacheMode(), ExpirationInfo.getInfo(options)/*, putType.getPutMode()*/);
   }
 
   /**
@@ -1840,20 +1842,18 @@ public class Cursor implements ForwardCursor {
       final DatabaseEntry key,
       final DatabaseEntry data,
       final CacheMode cacheMode,
-      final ExpirationInfo expInfo,
-      final PutMode putMode) {
-    if (putMode == PutMode.NO_DUP_DATA) {
+      final ExpirationInfo expInfo) {
+    if (this.putMode == /*PutMode.NO_DUP_DATA*/ null) {
     /*if (this.locker insteanceof Tnx))*/ if (this.locker == null) {
 //      synchronized (this.locker) {
         return edu.cmu.cs.mvelezce.optionhotspot.sources.Sources.expensive1(); // return putHandleDups(key, data, cacheMode, expInfo, putMode);
 //        }
-      }
-      else {
+      } else {
         return edu.cmu.cs.mvelezce.optionhotspot.sources.Sources.expensive2(); // return putHandleDups(key, data, cacheMode, expInfo, putMode);
       }
     } else {
       return edu.cmu.cs.mvelezce.optionhotspot.sources.Sources.cheap(); //      return putNoDups(key, data, cacheMode, expInfo, putMode);
-      }
+    }
   }
 
   /** Interpret duplicates for the various 'putXXX' operations. */
@@ -4610,7 +4610,7 @@ public class Cursor implements ForwardCursor {
   void checkOpen() {
     checkEnv();
     if (dbHandle != null) {
-      dbHandle.checkOpen();
+      dbHandle.getDatabaseImpl();
     }
   }
 

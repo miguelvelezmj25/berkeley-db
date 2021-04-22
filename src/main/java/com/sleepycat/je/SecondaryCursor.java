@@ -83,7 +83,7 @@ public class SecondaryCursor extends Cursor {
    */
   SecondaryCursor(
       final SecondaryDatabase dbHandle, final Locker locker, final CursorConfig cursorConfig) {
-    super(dbHandle, locker, cursorConfig);
+    super(dbHandle, locker, null, cursorConfig);
     secondaryDb = dbHandle;
   }
 

@@ -145,7 +145,7 @@ public class SecondaryDatabase extends Database {
         throw new IllegalArgumentException(
             "Exactly one must be non-null: " + "PrimaryDatabase or SecondaryAssociation");
       }
-      primaryDatabase.checkOpen();
+      primaryDatabase.getDatabaseImpl();
       if (primaryDatabase.configuration.getSortedDuplicates()) {
         throw new IllegalArgumentException(
             "Duplicates not allowed for a primary database: " + primaryDatabase.getDebugName());
@@ -262,7 +262,7 @@ public class SecondaryDatabase extends Database {
     Cursor secCursor = null;
     Cursor priCursor = null;
     try {
-      secCursor = new Cursor(this, locker, null);
+      secCursor = new Cursor(this, locker, null, null);
 
       DatabaseEntry key = new DatabaseEntry();
       DatabaseEntry data = new DatabaseEntry();
@@ -274,7 +274,7 @@ public class SecondaryDatabase extends Database {
       }
 
       /* Is empty, so populate */
-      priCursor = new Cursor(primaryDatabase, locker, null);
+      priCursor = new Cursor(primaryDatabase, locker, null, null);
 
       result = priCursor.position(key, data, LockMode.DEFAULT, null, true);
 
@@ -422,7 +422,7 @@ public class SecondaryDatabase extends Database {
       if (batchSize <= 0) {
         throw new IllegalArgumentException("batchSize must be positive");
       }
-      final DatabaseImpl dbImpl = checkOpen();
+      final DatabaseImpl dbImpl = getDatabaseImpl();
       trace(Level.FINEST, "deleteObsoletePrimaryKeys", null, key, null, null);
 
       final Locker locker =
@@ -434,7 +434,7 @@ public class SecondaryDatabase extends Database {
               dbImpl.isReplicated() /*autoTxnIsReplicated*/);
       try {
         final boolean result;
-        try (final Cursor cursor = new Cursor(this, locker, null)) {
+        try (final Cursor cursor = new Cursor(this, locker, null, null)) {
           result = deleteObsoletePrimaryKeysInternal(cursor, locker, key, data, batchSize);
         }
         locker.operationEnd(true);
@@ -626,7 +626,7 @@ public class SecondaryDatabase extends Database {
       final LockMode lockMode =
           locker.isSerializableIsolation() ? LockMode.RMW : LockMode.READ_UNCOMMITTED_ALL;
 
-      try (Cursor cursor = new Cursor(this, locker, null)) {
+      try (Cursor cursor = new Cursor(this, locker, null, null)) {
         /* Read the primary key (the data of a secondary). */
 
         final DatabaseEntry pKey = new DatabaseEntry();
@@ -677,7 +677,7 @@ public class SecondaryDatabase extends Database {
             }
           }
 
-          checkOpen();
+          getDatabaseImpl();
 
           searchResult = cursor.retrieveNext(key, pKey, lockMode, null, GetMode.NEXT_DUP);
         }
@@ -954,7 +954,7 @@ public class SecondaryDatabase extends Database {
    */
   @Override
   public OperationResult put(
-      final Transaction txn,
+      /*final Transaction txn,*/
       final DatabaseEntry key,
       final DatabaseEntry data,
       final Put putType,
@@ -981,7 +981,7 @@ public class SecondaryDatabase extends Database {
    */
   @Override
   public OperationStatus putNoOverwrite(
-      final Transaction txn, final DatabaseEntry key, final DatabaseEntry data) {
+      /*final Transaction txn,*/ final DatabaseEntry key, final Put putType, final DatabaseEntry data) {
     throw notAllowedException();
   }
 
@@ -992,7 +992,7 @@ public class SecondaryDatabase extends Database {
    */
   @Override
   public OperationStatus putNoDupData(
-      final Transaction txn, final DatabaseEntry key, final DatabaseEntry data) {
+      /*final Transaction txn,*/ final DatabaseEntry key, final Put putType, final DatabaseEntry data) {
     throw notAllowedException();
   }
 
@@ -1086,7 +1086,7 @@ public class SecondaryDatabase extends Database {
 
       if (doDelete || doInsert || doUpdate) {
         if (localCursor) {
-          cursor = new Cursor(this, locker, null);
+          cursor = new Cursor(this, locker, null, null);
         }
         try {
           if (doDelete) {
@@ -1177,7 +1177,7 @@ public class SecondaryDatabase extends Database {
       if (!toDelete.isEmpty() || !toInsert.isEmpty() || !toUpdate.isEmpty()) {
 
         if (localCursor) {
-          cursor = new Cursor(this, locker, null);
+          cursor = new Cursor(this, locker, null, null);
         }
         try {
           if (!toDelete.isEmpty()) {
@@ -1267,7 +1267,7 @@ public class SecondaryDatabase extends Database {
 
     if (foreignDb != null) {
 
-      try (final Cursor foreignCursor = new Cursor(foreignDb, locker, null)) {
+      try (final Cursor foreignCursor = new Cursor(foreignDb, locker, null, null)) {
 
         final DatabaseEntry tmpData = new DatabaseEntry();
 
@@ -1298,7 +1298,7 @@ public class SecondaryDatabase extends Database {
     if (configuration.getSortedDuplicates()) {
 
       final OperationResult result =
-          cursor.putInternal(newSecKey, priKey, cacheMode, expInfo, PutMode.NO_DUP_DATA);
+          cursor.putInternal(newSecKey, priKey, cacheMode, expInfo/*, PutMode.NO_DUP_DATA*/);
 
       if (result == null && isFullyPopulated) {
         throw new SecondaryIntegrityException(
@@ -1312,7 +1312,7 @@ public class SecondaryDatabase extends Database {
       }
     } else {
       final OperationResult result =
-          cursor.putInternal(newSecKey, priKey, cacheMode, expInfo, PutMode.NO_OVERWRITE);
+          cursor.putInternal(newSecKey, priKey, cacheMode, expInfo/*, PutMode.NO_OVERWRITE*/);
 
       if (result == null && isFullyPopulated) {
         throw new UniqueConstraintException(
@@ -1375,7 +1375,7 @@ public class SecondaryDatabase extends Database {
       putMode = PutMode.OVERWRITE;
     }
 
-    cursor.putInternal(secKey, priKey, cacheMode, expInfo, putMode);
+    cursor.putInternal(secKey, priKey, cacheMode, expInfo/*, putMode*/);
   }
 
   /**
@@ -1397,7 +1397,7 @@ public class SecondaryDatabase extends Database {
      * Use the deleted foreign primary key to read the data of this
      * database, which is the associated primary's key.
      */
-    try (final Cursor cursor = new Cursor(this, locker, null)) {
+    try (final Cursor cursor = new Cursor(this, locker, null, null)) {
 
       final DatabaseEntry priKey = new DatabaseEntry();
 
@@ -1446,7 +1446,7 @@ public class SecondaryDatabase extends Database {
           final Database primaryDb = getPrimary(priKey);
           if (primaryDb != null) {
 
-            try (final Cursor priCursor = new Cursor(primaryDb, locker, null)) {
+            try (final Cursor priCursor = new Cursor(primaryDb, locker, null, null)) {
 
               final DatabaseEntry data = new DatabaseEntry();
 
@@ -1571,7 +1571,7 @@ public class SecondaryDatabase extends Database {
   }
 
   private DatabaseImpl checkReadable() {
-    final DatabaseImpl dbImpl = checkOpen();
+    final DatabaseImpl dbImpl = getDatabaseImpl();
     if (!isFullyPopulated) {
       throw new IllegalStateException("Incremental population is currently enabled.");
     }

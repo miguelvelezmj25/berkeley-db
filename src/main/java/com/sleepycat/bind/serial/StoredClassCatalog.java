@@ -110,7 +110,7 @@ public class StoredClassCatalog implements ClassCatalog {
        */
       OperationStatus status = db.get(null, key, data, null);
       if (status == OperationStatus.NOTFOUND) {
-        db.putNoOverwrite(null, key, data);
+        db.putNoOverwrite(/*null,*/ key, Put.NO_OVERWRITE, data);
       }
     }
   }

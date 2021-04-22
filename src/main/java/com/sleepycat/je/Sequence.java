@@ -125,7 +125,7 @@ public class Sequence implements Closeable {
     try {
       locker = LockerFactory.getReadableLocker(db, txn, false /*readCommitedIsolation*/);
 
-      cursor = new Cursor(db, locker, null);
+      cursor = new Cursor(db, locker, null, null);
 
       boolean sequenceExists = readData(cursor, null);
       boolean isWritableLocker =
@@ -149,12 +149,12 @@ public class Sequence implements Closeable {
             locker =
                 LockerFactory.getWritableLocker(
                     db.getEnvironment(),
-                    txn,
+                    /*txn,*/
                     db.getDbImpl().isInternalDb(),
                     db.isTransactional(),
                     db.getDbImpl().isReplicated(),
                     autoCommitConfig);
-            cursor = new Cursor(db, locker, null);
+            cursor = new Cursor(db, locker, null, null);
           }
 
           /* Get the persistent fields from the config. */
@@ -291,14 +291,14 @@ public class Sequence implements Closeable {
         locker =
             LockerFactory.getWritableLocker(
                 db.getEnvironment(),
-                txn,
+                /*txn,*/
                 db.getDbImpl().isInternalDb(),
                 db.isTransactional(),
                 db.getDbImpl().isReplicated(),
                 // autoTxnIsReplicated
                 autoCommitConfig);
 
-        cursor = new Cursor(db, locker, null);
+        cursor = new Cursor(db, locker, null, null);
 
         /* Get the existing record. */
         readDataRequired(cursor, LockMode.RMW);

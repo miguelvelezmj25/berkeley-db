@@ -760,7 +760,7 @@ public class Database implements Closeable {
   public void sync() {
 
     checkEnv();
-    final DatabaseImpl dbImpl = checkOpen();
+    final DatabaseImpl dbImpl = getDatabaseImpl();
     trace(Level.FINEST, "Database.sync", null, null, null, null);
 
     dbImpl.sync(true);
@@ -798,7 +798,7 @@ public class Database implements Closeable {
     try {
       checkEnv();
       DatabaseUtil.checkForNullDbt(key, "key", true);
-      checkOpen();
+      getDatabaseImpl();
       trace(Level.FINEST, "Database.openSequence", txn, key, null, null);
 
       return new Sequence(this, txn, key, config);
@@ -853,7 +853,7 @@ public class Database implements Closeable {
   public Cursor openCursor(final Transaction txn, CursorConfig cursorConfig) {
     try {
       checkEnv();
-      checkOpen();
+      getDatabaseImpl();
 
       if (cursorConfig == null) {
         cursorConfig = CursorConfig.DEFAULT;
@@ -889,7 +889,7 @@ public class Database implements Closeable {
   public DiskOrderedCursor openCursor(DiskOrderedCursorConfig cursorConfig) {
     try {
       checkEnv();
-      checkOpen();
+      getDatabaseImpl();
 
       if (cursorConfig == null) {
         cursorConfig = DiskOrderedCursorConfig.DEFAULT;
@@ -962,7 +962,7 @@ public class Database implements Closeable {
       checkEnv();
       DatabaseUtil.checkForNullDbt(key, "key", true);
       DatabaseUtil.checkForNullDbt(data, "true", true);
-      final DatabaseImpl dbImpl = checkOpen();
+      final DatabaseImpl dbImpl = getDatabaseImpl();
       trace(Level.FINEST, "populateSecondaries", null, key, data, null);
 
       final Collection<SecondaryDatabase> secondaries = secAssoc.getSecondaries(key);
@@ -1034,7 +1034,7 @@ public class Database implements Closeable {
       final Transaction txn, final DatabaseEntry key, final WriteOptions options) {
     try {
       checkEnv();
-      final DatabaseImpl dbImpl = checkOpen();
+      final DatabaseImpl dbImpl = getDatabaseImpl();
 
       trace(Level.FINEST, "Database.delete", txn, key, null, null);
 
@@ -1075,7 +1075,7 @@ public class Database implements Closeable {
     final DatabaseEntry noData = new DatabaseEntry();
     noData.setPartial(0, 0, true);
 
-    try (final Cursor cursor = new Cursor(this, locker, null)) {
+    try (final Cursor cursor = new Cursor(this, locker, null,null)) {
       cursor.setNonSticky(true);
 
       final LockMode lockMode =
@@ -1205,7 +1205,7 @@ public class Database implements Closeable {
 
     try {
       checkEnv();
-      checkOpen();
+      getDatabaseImpl();
 
       if (options == null) {
         options = Cursor.DEFAULT_READ_OPTIONS;
@@ -1232,7 +1232,7 @@ public class Database implements Closeable {
           LockerFactory.getReadableLocker(this, txn, cursorConfig.getReadCommitted());
 
       try {
-        try (final Cursor cursor = new Cursor(this, locker, cursorConfig)) {
+        try (final Cursor cursor = new Cursor(this, locker, null, cursorConfig)) {
 
           result = cursor.getInternal(key, data, getType, options, lockMode);
         }
@@ -1312,7 +1312,6 @@ public class Database implements Closeable {
   }
 
   public OperationResult put(
-      final Transaction txn,
       final DatabaseEntry key,
       final DatabaseEntry data,
       final Put putType,
@@ -1320,7 +1319,6 @@ public class Database implements Closeable {
 
 //    try {
 //      checkEnv();
-      final DatabaseImpl dbImpl = checkOpen();
 
 //      if (putType == Put.CURRENT) {
 //        throw new IllegalArgumentException("putType may not be Put.CURRENT");
@@ -1329,19 +1327,19 @@ public class Database implements Closeable {
       OperationResult result = null;
 
 //      trace(Level.FINEST, "Database.put", String.valueOf(putType), txn, key, data, null);
-
+      boolean transactionalDb = this.databaseImpl.isTransactional();
       final Locker locker =
           LockerFactory.getWritableLocker(
               /*envHandle*/null,
-              txn,
               /*dbImpl.isInternalDb()*/false,
-              dbImpl.isTransactional(),
+              transactionalDb,
               /*dbImpl.isReplicated()*/false, null); // autoTxnIsReplicated
 
 //      try {
-        try (final Cursor cursor = new Cursor(this, locker, DEFAULT_CURSOR_CONFIG)) {
+        PutMode putMode = putType.getPutMode();
+        try (final Cursor cursor = new Cursor(this, locker, putMode, DEFAULT_CURSOR_CONFIG)) {
 
-          result = cursor.putInternal(key, data, options.getCacheMode(), ExpirationInfo.getInfo(options), putType.getPutMode());//          result = cursor.putInternal(key, data, putType, options);
+          result = cursor.putInternal(key, data, options.getCacheMode(), ExpirationInfo.getInfo(options));//          result = cursor.putInternal(key, data, putType, options);
         }
 //      } finally {
 //        locker.operationEnd(result != null);
@@ -1354,16 +1352,20 @@ public class Database implements Closeable {
 //    }
   }
 
-  public OperationStatus putNoOverwrite(
-      final Transaction txn, final DatabaseEntry key, final DatabaseEntry data) {
-    final OperationResult result = put(txn, key, data, Put.NO_OVERWRITE, null);
+  public OperationStatus putNoOverwrite(final DatabaseEntry key, final Put putType, final DatabaseEntry data) {
+    if(putType != Put.NO_DUP_DATA) {
+      throw new IllegalArgumentException("putType needs to be Put.NO_DUP_DATA");
+    }
+    final OperationResult result = put(key, data, putType, null);
 
     return result == null ? OperationStatus.KEYEXIST : OperationStatus.SUCCESS;
   }
 
-  public OperationStatus putNoDupData(
-      final Transaction txn, final DatabaseEntry key, final DatabaseEntry data) {
-    final OperationResult result = put(txn, key, data, Put.NO_DUP_DATA, null);
+  public OperationStatus putNoDupData(final DatabaseEntry key, final Put putType, final DatabaseEntry data) {
+    if(putType != Put.NO_OVERWRITE) {
+      throw new IllegalArgumentException("putType needs to be Put.NO_OVERWRITE");
+    }
+    final OperationResult result = put(key, data, putType, null);
 
     return result == null ? OperationStatus.KEYEXIST : OperationStatus.SUCCESS;
   }
@@ -1396,7 +1398,7 @@ public class Database implements Closeable {
   public JoinCursor join(final Cursor[] cursors, final JoinConfig config) {
     try {
       EnvironmentImpl env = checkEnv();
-      checkOpen();
+      getDatabaseImpl();
       DatabaseUtil.checkForNullParam(cursors, "cursors");
       if (cursors.length == 0) {
         throw new IllegalArgumentException("At least one cursor is required.");
@@ -1455,7 +1457,7 @@ public class Database implements Closeable {
    */
   public void preload(final long maxBytes) {
     checkEnv();
-    final DatabaseImpl dbImpl = checkOpen();
+    final DatabaseImpl dbImpl = getDatabaseImpl();
 
     PreloadConfig config = new PreloadConfig();
     config.setMaxBytes(maxBytes);
@@ -1485,7 +1487,7 @@ public class Database implements Closeable {
    */
   public void preload(final long maxBytes, final long maxMillisecs) {
     checkEnv();
-    final DatabaseImpl dbImpl = checkOpen();
+    final DatabaseImpl dbImpl = getDatabaseImpl();
 
     PreloadConfig config = new PreloadConfig();
     config.setMaxBytes(maxBytes);
@@ -1521,7 +1523,7 @@ public class Database implements Closeable {
    */
   public PreloadStats preload(final PreloadConfig config) {
     checkEnv();
-    final DatabaseImpl dbImpl = checkOpen();
+    final DatabaseImpl dbImpl = getDatabaseImpl();
 
     PreloadConfig useConfig = (config == null) ? new PreloadConfig() : config;
 
@@ -1559,7 +1561,7 @@ public class Database implements Closeable {
    */
   public long count() {
     checkEnv();
-    final DatabaseImpl dbImpl = checkOpen();
+    final DatabaseImpl dbImpl = getDatabaseImpl();
 
     return dbImpl.count(0);
   }
@@ -1591,7 +1593,7 @@ public class Database implements Closeable {
    */
   public long count(long memoryLimit) {
     checkEnv();
-    final DatabaseImpl dbImpl = checkOpen();
+    final DatabaseImpl dbImpl = getDatabaseImpl();
 
     return dbImpl.count(memoryLimit);
   }
@@ -1617,7 +1619,7 @@ public class Database implements Closeable {
    */
   public DatabaseStats getStats(StatsConfig config) {
     checkEnv();
-    final DatabaseImpl dbImpl = checkOpen();
+    final DatabaseImpl dbImpl = getDatabaseImpl();
 
     if (config == null) {
       config = StatsConfig.DEFAULT;
@@ -1645,7 +1647,7 @@ public class Database implements Closeable {
   public DatabaseStats verify(VerifyConfig config) {
     try {
       checkEnv();
-      final DatabaseImpl dbImpl = checkOpen();
+      final DatabaseImpl dbImpl = getDatabaseImpl();
 
       if (config == null) {
         config = VerifyConfig.DEFAULT;
@@ -1671,7 +1673,7 @@ public class Database implements Closeable {
   public String getDatabaseName() {
     try {
       checkEnv();
-      final DatabaseImpl dbImpl = checkOpen();
+      final DatabaseImpl dbImpl = getDatabaseImpl();
 
       return dbImpl.getName();
     } catch (Error E) {
@@ -1705,7 +1707,7 @@ public class Database implements Closeable {
   public DatabaseConfig getConfig() {
 
     checkEnv();
-    final DatabaseImpl dbImpl = checkOpen();
+    final DatabaseImpl dbImpl = getDatabaseImpl();
 
     try {
       return DatabaseConfig.combineConfig(dbImpl, configuration);
@@ -1717,7 +1719,7 @@ public class Database implements Closeable {
 
   /** Equivalent to getConfig().getTransactional() but cheaper. */
   boolean isTransactional() {
-    final DatabaseImpl dbImpl = checkOpen();
+    final DatabaseImpl dbImpl = getDatabaseImpl();
     return dbImpl.isTransactional();
   }
 
@@ -1780,7 +1782,7 @@ public class Database implements Closeable {
       final DatabaseEntry entry1, final DatabaseEntry entry2, final boolean duplicates) {
     try {
       checkEnv();
-      final DatabaseImpl dbImpl = checkOpen();
+      final DatabaseImpl dbImpl = getDatabaseImpl();
       DatabaseUtil.checkForNullDbt(entry1, "entry1", true);
       DatabaseUtil.checkForNullDbt(entry2, "entry2", true);
       DatabaseUtil.checkForPartial(entry1, "entry1");
@@ -1827,7 +1829,7 @@ public class Database implements Closeable {
       return dbImpl;
     }
 
-    checkOpen();
+    getDatabaseImpl();
 
     /*
      * checkOpen should have thrown an exception, but we'll throw again
@@ -1854,21 +1856,21 @@ public class Database implements Closeable {
      * allow closing a cursor after an operation failure. [#17015]
      */
     if (state != DbState.PREEMPTED && state != DbState.CORRUPTED) {
-      checkOpen();
+      getDatabaseImpl();
     }
     openCursors.getAndDecrement();
   }
 
   @SuppressWarnings("unused")
   void addCursor(final ForwardCursor ignore) {
-    checkOpen();
+    getDatabaseImpl();
     openCursors.getAndIncrement();
   }
 
-  DatabaseImpl checkOpen() {
+  DatabaseImpl getDatabaseImpl() {
 //    switch (state) {
 //      case OPEN:
-        return databaseImpl;
+        return this.databaseImpl;
 //      case CLOSED:
 //        throw new IllegalStateException("Database was closed.");
 //      case INVALID:

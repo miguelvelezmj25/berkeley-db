@@ -1082,7 +1082,7 @@ public class DbCacheSize {
 
       final OperationResult result =
           db.put(
-              null, keyEntry, dataEntry, duplicates ? Put.NO_DUP_DATA : Put.NO_OVERWRITE, options);
+              /*null, */keyEntry, dataEntry, duplicates ? Put.NO_DUP_DATA : Put.NO_OVERWRITE, options);
 
       if (result == null) {
         throw new IllegalStateException();

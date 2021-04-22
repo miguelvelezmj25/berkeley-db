@@ -488,7 +488,7 @@ public class PrimaryIndex<PK, E> extends BasicIndex<PK, E> {
     assignKey(entity, keyEntry);
     entityBinding.objectToData(entity, dataEntry);
 
-    OperationStatus status = db.putNoOverwrite(txn, keyEntry, dataEntry);
+    OperationStatus status = db.putNoOverwrite(/*txn,*/ keyEntry, Put.NO_OVERWRITE, dataEntry);
 
     return (status == OperationStatus.SUCCESS);
   }
@@ -529,7 +529,7 @@ public class PrimaryIndex<PK, E> extends BasicIndex<PK, E> {
     assignKey(entity, keyEntry);
     entityBinding.objectToData(entity, dataEntry);
 
-    return db.put(txn, keyEntry, dataEntry, putType, options);
+    return db.put(/*txn, */keyEntry, dataEntry, putType, options);
   }
   /* <!-- end JE only --> */
 
