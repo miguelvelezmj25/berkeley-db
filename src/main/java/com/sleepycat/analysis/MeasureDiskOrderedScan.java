@@ -294,7 +294,7 @@ public class MeasureDiskOrderedScan {
       makeData(data);
       OperationStatus status;
       /* Insert */
-      if (dupDb) {
+      if (this.dupDb) {
         status = db.putNoDupData(key, putType, data);
       } else {
         status = db.putNoOverwrite(key, putType, data);
