@@ -15,7 +15,7 @@ package com.sleepycat.je;
 
 import com.sleepycat.je.config.EnvironmentParams;
 import com.sleepycat.je.dbi.*;
-import com.sleepycat.je.dbi.CursorImpl.LockStanding;
+import com.sleepycat.je.dbi.CursorImpl.LockStanding;import com.sleepycat.je.internal.IN;
 import com.sleepycat.je.latch.LatchSupport;
 import com.sleepycat.je.log.LogUtils;
 import com.sleepycat.je.log.ReplicationContext;
@@ -1843,16 +1843,16 @@ public class Cursor implements ForwardCursor {
       final DatabaseEntry data,
       final CacheMode cacheMode,
       final ExpirationInfo expInfo) {
-    if (this.putMode == /*PutMode.NO_DUP_DATA*/ null) {
-    /*if (this.locker insteanceof Tnx))*/ if (this.locker == null) {
-//      synchronized (this.locker) {
-        return edu.cmu.cs.mvelezce.optionhotspot.sources.Sources.expensive1(); // return putHandleDups(key, data, cacheMode, expInfo, putMode);
-//        }
+    if (this.putMode == PutMode.NO_DUP_DATA) {
+      if (this.locker instanceof Txn) {
+        synchronized (this.locker) {
+          return IN.putHandleDupsSync(key, data, cacheMode, expInfo, putMode, this.locker);
+        }
       } else {
-        return edu.cmu.cs.mvelezce.optionhotspot.sources.Sources.expensive2(); // return putHandleDups(key, data, cacheMode, expInfo, putMode);
+        return IN.putHandleDups(key, data, cacheMode, expInfo, putMode);
       }
     } else {
-      return edu.cmu.cs.mvelezce.optionhotspot.sources.Sources.cheap(); //      return putNoDups(key, data, cacheMode, expInfo, putMode);
+      return IN.putNoDups(key, data, cacheMode, expInfo, putMode);
     }
   }
 

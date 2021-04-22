@@ -655,7 +655,7 @@ public class Environment implements Closeable {
     HandleLocker handleLocker = null;
     final Locker locker =
         LockerFactory.getWritableLocker(
-            this, txn, isInternalDb, dbConfig.getTransactional(), autoTxnIsReplicated, null);
+            this, /*txn,*/ isInternalDb, dbConfig.getTransactional(), autoTxnIsReplicated, null);
     try {
 
       /*

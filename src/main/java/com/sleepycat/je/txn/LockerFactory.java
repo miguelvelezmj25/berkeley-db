@@ -51,7 +51,7 @@ public class LockerFactory {
     final EnvironmentImpl envImpl = DbInternal.getNonNullEnvImpl(env);
     final boolean envIsTransactional = envImpl.isTransactional();
 
-    if (userTxn == null) {
+    if (env == null) {
       final Transaction xaLocker = env.getThreadTransaction();
       if (xaLocker != null) {
         return DbInternal.getLocker(xaLocker);
@@ -94,7 +94,7 @@ public class LockerFactory {
      * wrap the given transactional locker in a special locker for that
      * isolation level.
      */
-    final Locker locker = DbInternal.getLocker(userTxn);
+    final Locker locker = DbInternal.getLocker(null);
     if (locker.isReadCommittedIsolation()) {
       return ReadCommittedLocker.createReadCommittedLocker(envImpl, locker);
     }
