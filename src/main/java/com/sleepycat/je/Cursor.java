@@ -1843,8 +1843,8 @@ public class Cursor implements ForwardCursor {
       final DatabaseEntry data,
       final CacheMode cacheMode,
       final ExpirationInfo expInfo) {
-    if (this.putMode == PutMode.NO_DUP_DATA) {
-      if (this.locker instanceof Txn) {
+    if (this.putMode == PutMode.NO_DUP_DATA) { // Influenced by: DUPLICATES
+      if (this.locker instanceof Txn) { // Influenced by: TRANSACTIONS
         synchronized (this.locker) {
           return IN.putHandleDupsSync(key, data, cacheMode, expInfo, putMode, this.locker);
         }
