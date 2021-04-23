@@ -4,7 +4,7 @@ High-performance embeddable database providing key-value storage.
 
 ## Performance bug report
 
-I am using your program to store 500K entries, but it is taking quite some time to execute (about 67 seconds). This is
+I am using your program to store 500K entries, but it is taking quite some time to execute (about 69 seconds). This is
 the configuration that I used:
 
 * `ADLER32_CHUNK_SIZE = 1_000`
@@ -37,8 +37,8 @@ to execute?"**?.
 ### ADLER32_CHUNK_SIZE
 
 Setting this parameter will cause JE to pass chunks of the log record to the checksumming class so that the GC does not
-block. 
-0 means do not chunk. 
+block.
+0 means do not chunk.
 Default = 0.
 
 ### CACHE_MODE
@@ -46,7 +46,7 @@ Modes that can be specified for control over caching of records in the JE in-mem
 Default = UNCHANGED
 
 ### CHECKPOINTER_BYTES_INTERVAL
-Ask the checkpointer to run every time we write this many bytes to the log. 
+Ask the checkpointer to run every time we write this many bytes to the log.
 Default = 20000000.
 
 ### DUPLICATES
