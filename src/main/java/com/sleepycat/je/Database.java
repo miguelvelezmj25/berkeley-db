@@ -1330,10 +1330,10 @@ public class Database implements Closeable {
       boolean transactionalDb = this.databaseImpl.isTransactional();
       final Locker locker =
         LockerFactory.getWritableLocker(
-              /*envHandle*/null,
-              /*dbImpl.isInternalDb()*/false,
+              envHandle,
+              this.databaseImpl.isInternalDb(),
               transactionalDb,
-              /*dbImpl.isReplicated()*/false, null); // autoTxnIsReplicated
+              this.databaseImpl.isReplicated(), null); // autoTxnIsReplicated
 
       try {
         PutMode putMode = putType.getPutMode();
