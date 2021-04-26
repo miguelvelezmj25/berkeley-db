@@ -23,10 +23,10 @@ public enum PutMode {
   CURRENT,
 
   /**
-   * User operation: Cursor.putNoDupData. Applies only to databases with duplicates. Insert key/data
+   * User operation: Cursor.putDupData. Applies only to databases with duplicates. Insert key/data
    * pair if it does not already exist; otherwise, return KEYEXIST.
    */
-  NO_DUP_DATA,
+  DUP_DATA,
 
   /**
    * User operation: Cursor.putNoOverwrite. Insert key/data pair if key does not already exist;

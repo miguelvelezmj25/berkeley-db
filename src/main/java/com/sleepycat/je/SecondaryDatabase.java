@@ -991,7 +991,7 @@ public class SecondaryDatabase extends Database {
    * be used instead.
    */
   @Override
-  public OperationStatus putNoDupData(
+  public OperationStatus putDupData(
       /*final Transaction txn,*/ final DatabaseEntry key, final Put putType, final DatabaseEntry data) {
     throw notAllowedException();
   }

@@ -54,7 +54,7 @@ public enum Put {
    *
    * <p>The operation does not succeed (null is returned) when an existing record matches.
    */
-  NO_DUP_DATA(PutMode.NO_DUP_DATA),
+   DUP_DATA(PutMode.DUP_DATA),
 
   /**
    * Updates the data of the record at the cursor position.

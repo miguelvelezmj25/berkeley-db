@@ -535,7 +535,7 @@ public class Cursor implements ForwardCursor {
    *     there are no records with a matching key.</td>
    * </tr>
    * <tr>
-   *     <td>{@link Put#NO_DUP_DATA}</td>
+   *     <td>{@link Put#DUP_DATA}</td>
    *     <td>Inserts a record in a database with duplicate keys if a record
    *     with a matching key and data is not already present.</td>
    *     <td>When an existing record matches.</td>
@@ -715,7 +715,7 @@ public class Cursor implements ForwardCursor {
    * Stores a key/data pair into the database. The database must be configured for duplicates.
    *
    * <p>Calling this method is equivalent to calling {@link #put(DatabaseEntry, DatabaseEntry, Put,
-   * WriteOptions)} with {@link Put#NO_DUP_DATA}.
+   * WriteOptions)} with {@link Put#DUP_DATA}.
    *
    * <p>If the putNoDupData method succeeds, the cursor is positioned to refer to the newly inserted
    * item.
@@ -744,7 +744,7 @@ public class Cursor implements ForwardCursor {
    */
   public OperationStatus putNoDupData(final DatabaseEntry key, final DatabaseEntry data) {
 
-    final OperationResult result = put(key, data, Put.NO_DUP_DATA, null);
+    final OperationResult result = put(key, data, Put.DUP_DATA, null);
 
     return result == null ? OperationStatus.KEYEXIST : OperationStatus.SUCCESS;
   }
@@ -1843,7 +1843,7 @@ public class Cursor implements ForwardCursor {
       final DatabaseEntry data,
       final CacheMode cacheMode,
       final ExpirationInfo expInfo) {
-    if (this.putMode == PutMode.NO_DUP_DATA) { // Influenced by: DUPLICATES
+    if (this.putMode == PutMode.DUP_DATA) { // Influenced by: DUPLICATES
       if (this.locker instanceof Txn) { // Influenced by: TRANSACTIONS
         synchronized (this.locker) {
           return IN.putHandleDupsSync(key, data, cacheMode, expInfo, putMode, this.locker);
@@ -1869,7 +1869,7 @@ public class Cursor implements ForwardCursor {
         return dupsPutOverwrite(key, data, cacheMode, expInfo);
       case NO_OVERWRITE:
         return dupsPutNoOverwrite(key, data, cacheMode, expInfo);
-      case NO_DUP_DATA:
+      case DUP_DATA:
         return dupsPutNoDupData(key, data, cacheMode, expInfo);
       case CURRENT:
         return dupsPutCurrent(data, cacheMode, expInfo);

@@ -278,10 +278,10 @@ public class MeasureDiskOrderedScan {
   private void populate() {
     Put putType;
     if(this.dupDb) {
-      putType = Put.NO_OVERWRITE;
+      putType = Put.DUP_DATA;
     }
     else {
-      putType = Put.NO_DUP_DATA;
+      putType = Put.NO_OVERWRITE;
     }
     final DatabaseEntry key = new DatabaseEntry();
     final DatabaseEntry data = new DatabaseEntry();
@@ -295,9 +295,9 @@ public class MeasureDiskOrderedScan {
       OperationStatus status;
       /* Insert */
       if (this.dupDb) {
-        status = db.putNoDupData(key, putType, data);
+        status = this.db.putDupData(key, putType, data);
       } else {
-        status = db.putNoOverwrite(key, putType, data);
+        status = this.db.putNoOverwrite(key, putType, data);
       }
       if (status != OperationStatus.SUCCESS) {
         fail(status);

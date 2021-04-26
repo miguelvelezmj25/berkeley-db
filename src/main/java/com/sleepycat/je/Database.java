@@ -1353,17 +1353,17 @@ public class Database implements Closeable {
   }
 
   public OperationStatus putNoOverwrite(final DatabaseEntry key, final Put putType, final DatabaseEntry data) {
-    if(putType != Put.NO_DUP_DATA) {
-      throw new IllegalArgumentException("putType needs to be Put.NO_DUP_DATA");
+    if(putType != Put.NO_OVERWRITE) {
+      throw new IllegalArgumentException("putType needs to be Put.NO_OVERWRITE");
     }
     final OperationResult result = put(key, data, putType, null);
 
     return result == null ? OperationStatus.KEYEXIST : OperationStatus.SUCCESS;
   }
 
-  public OperationStatus putNoDupData(final DatabaseEntry key, final Put putType, final DatabaseEntry data) {
-    if(putType != Put.NO_OVERWRITE) {
-      throw new IllegalArgumentException("putType needs to be Put.NO_OVERWRITE");
+  public OperationStatus putDupData(final DatabaseEntry key, final Put putType, final DatabaseEntry data) {
+    if(putType != Put.DUP_DATA) {
+      throw new IllegalArgumentException("putType needs to be Put.DUP_DATA");
     }
     final OperationResult result = put(key, data, putType, null);
 
