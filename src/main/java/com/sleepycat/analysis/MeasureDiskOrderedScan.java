@@ -18,20 +18,33 @@ public class MeasureDiskOrderedScan {
   private static String ADLER32_CHUNK_SIZE;
   private static CacheMode CACHE_MODE;
   private static String CHECKPOINTER_BYTES_INTERVAL;
+  private static boolean DEFERRED_WRITE;
   private static boolean DUPLICATES;
   private static String ENV_BACKGROUND_READ_LIMIT;
   private static boolean ENV_IS_LOCKING;
   private static boolean ENV_SHARED_CACHE;
+  private static boolean FLUSH_REQUIRED;
   private static Durability JE_DURABILITY;
   private static String JE_FILE_LEVEL;
+  private static boolean KEY_PREFIXING;
+  private static String LATCH_TIMEOUT;
   private static boolean LOCK_DEADLOCK_DETECT;
   private static String LOCK_DEADLOCK_DETECT_DELAY;
   private static long MAX_MEMORY;
+  private static String NODE_MAX_ENTRIES;
+  private static String OFFHEAP_EVICT_BYTES;
+  private static boolean OVERRIDE_BTREE_COMPARATOR;
+  private static boolean PROVISIONAL;
   private static boolean REPLICATED;
+  private static String RUN_CLEANER;
+  private static String RUN_EVICTOR;
+  private static String RUN_OFFHEAP_EVICTOR;
+  private static String RUN_VERIFIER;
   private static boolean SEQUENTIAL;
   private static boolean TEMPORARY;
   private static boolean TRANSACTIONS;
   private static boolean TXN_SERIALIZABLE_ISOLATION;
+  private static String VERIFY_DATA_RECORDS;
 
   private final Action action = Action.Populate;
   private final boolean keysOnly = false;
@@ -68,20 +81,33 @@ public class MeasureDiskOrderedScan {
     ADLER32_CHUNK_SIZE = "1000";
     CACHE_MODE = CacheMode.EVICT_LN;
     CHECKPOINTER_BYTES_INTERVAL = "20000000";
+    DEFERRED_WRITE = false;
     DUPLICATES = true;
     ENV_BACKGROUND_READ_LIMIT = "0";
     ENV_IS_LOCKING = true;
     ENV_SHARED_CACHE = true;
+    FLUSH_REQUIRED = false;
     JE_DURABILITY = Durability.COMMIT_WRITE_NO_SYNC;
     JE_FILE_LEVEL = "INFO";
+    KEY_PREFIXING = false;
+    LATCH_TIMEOUT = "25 ms";
     LOCK_DEADLOCK_DETECT = true;
     LOCK_DEADLOCK_DETECT_DELAY = "10 sec";
     MAX_MEMORY = 1000000;
+    NODE_MAX_ENTRIES = "512";
+    OFFHEAP_EVICT_BYTES = "102_400";
+    OVERRIDE_BTREE_COMPARATOR = false;
+    PROVISIONAL = false;
     REPLICATED = false;
+    RUN_CLEANER = "true";
+    RUN_EVICTOR = "false";
+    RUN_OFFHEAP_EVICTOR = "false";
+    RUN_VERIFIER = "true";
     SEQUENTIAL = false;
     TEMPORARY = true;
     TRANSACTIONS = true;
     TXN_SERIALIZABLE_ISOLATION = true;
+    VERIFY_DATA_RECORDS = "true";
 
     File output = new File("./tmp");
     FileUtils.forceDelete(output);
@@ -231,6 +257,10 @@ public class MeasureDiskOrderedScan {
     envConfig.setConfigParam(EnvironmentConfig.FILE_LOGGING_LEVEL, JE_FILE_LEVEL);
     envConfig.setConfigParam(
         EnvironmentConfig.ENV_BACKGROUND_READ_LIMIT, ENV_BACKGROUND_READ_LIMIT);
+    envConfig.setConfigParam(EnvironmentConfig.ENV_LATCH_TIMEOUT, LATCH_TIMEOUT);
+    envConfig.setConfigParam(EnvironmentConfig.VERIFY_DATA_RECORDS, VERIFY_DATA_RECORDS);
+    envConfig.setConfigParam(EnvironmentConfig.NODE_MAX_ENTRIES, NODE_MAX_ENTRIES);
+    envConfig.setConfigParam(EnvironmentConfig.OFFHEAP_EVICT_BYTES, OFFHEAP_EVICT_BYTES);
     envConfig.setConfigParam(
         EnvironmentConfig.LOCK_DEADLOCK_DETECT, String.valueOf(LOCK_DEADLOCK_DETECT));
     envConfig.setConfigParam(EnvironmentConfig.ADLER32_CHUNK_SIZE, ADLER32_CHUNK_SIZE);
@@ -241,12 +271,12 @@ public class MeasureDiskOrderedScan {
     /* Options */
 
     /* Daemons interfere with cache size measurements. */
-    envConfig.setConfigParam(EnvironmentConfig.ENV_RUN_EVICTOR, "false");
-    envConfig.setConfigParam(EnvironmentConfig.ENV_RUN_OFFHEAP_EVICTOR, "false");
+    envConfig.setConfigParam(EnvironmentConfig.ENV_RUN_EVICTOR, RUN_EVICTOR);
+    envConfig.setConfigParam(EnvironmentConfig.ENV_RUN_OFFHEAP_EVICTOR, RUN_OFFHEAP_EVICTOR);
     envConfig.setConfigParam(EnvironmentConfig.ENV_RUN_IN_COMPRESSOR, "false");
     envConfig.setConfigParam(EnvironmentConfig.ENV_RUN_CHECKPOINTER, "false");
-    envConfig.setConfigParam(EnvironmentConfig.ENV_RUN_CLEANER, "false");
-    envConfig.setConfigParam(EnvironmentConfig.ENV_RUN_VERIFIER, "false");
+    envConfig.setConfigParam(EnvironmentConfig.ENV_RUN_CLEANER, RUN_CLEANER);
+    envConfig.setConfigParam(EnvironmentConfig.ENV_RUN_VERIFIER, RUN_VERIFIER);
     envConfig.setConfigParam(EnvironmentConfig.STATS_COLLECT, "false");
     /* Daemons interfere with cache size measurements. */
 
@@ -258,6 +288,9 @@ public class MeasureDiskOrderedScan {
     dbConfig.setExclusiveCreate(create);
 
     /* Options */
+    dbConfig.setDeferredWrite(DEFERRED_WRITE);
+    dbConfig.setKeyPrefixing(KEY_PREFIXING);
+    dbConfig.setOverrideBtreeComparator(OVERRIDE_BTREE_COMPARATOR);
     dbConfig.setSortedDuplicates(DUPLICATES);
     dbConfig.setTransactional(TRANSACTIONS);
     dbConfig.setReplicated(REPLICATED);
@@ -277,7 +310,7 @@ public class MeasureDiskOrderedScan {
 
   private void populate() {
     Put putType;
-    if(this.dupDb) {
+    if (this.dupDb) {
       putType = Put.DUP_DATA;
     }
     else {
