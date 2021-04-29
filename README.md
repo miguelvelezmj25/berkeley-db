@@ -4,7 +4,7 @@ High-performance embeddable database providing key-value storage.
 
 ## Performance bug report
 
-I am using your program to store 500K entries, but it is taking quite some time to execute (about 69 seconds). This is
+I am using your program to store 500K entries, but it is taking quite some time to execute (about 61 seconds). This is
 the configuration that I used:
 
 * `ADLER32_CHUNK_SIZE = 1_000`
