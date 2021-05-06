@@ -33,7 +33,7 @@ the configuration that I used:
 * `RUN_OFFHEAP_EVICTOR = false`
 * `RUN_VERIFIER = true`
 * `SEQUENTIAL = false`
-* `TEMPORARY = true`
+* `TEMPORARY = false`
 * `TRANSACTIONS = true`
 * `TXN_SERIALIZABLE_ISOLATION = true`
 * `VERIFY_DATA_RECORDS = true`
