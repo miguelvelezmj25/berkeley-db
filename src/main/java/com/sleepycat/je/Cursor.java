@@ -183,11 +183,7 @@ public class Cursor implements ForwardCursor {
     /* Check that Database is open for internal Cursor usage. */
     final DatabaseImpl dbImpl = dbHandle.getDatabaseImpl();
 
-    this.locker = locker;
-    this.putMode = putMode;
-    this.dbImpl = dbImpl;
-
-    init(dbHandle, dbImpl, locker, cursorConfig, false /*retainNonTxnLocks*/);
+    init(dbHandle, dbImpl, locker, cursorConfig, false /*retainNonTxnLocks*/, putMode);
   }
 
   private void init(
@@ -195,7 +191,8 @@ public class Cursor implements ForwardCursor {
       final DatabaseImpl databaseImpl,
       final Locker locker,
       final CursorConfig cursorConfig,
-      final boolean retainNonTxnLocks) {
+      final boolean retainNonTxnLocks,
+      final PutMode putMode) {
     assert locker != null;
 
     /*
@@ -210,7 +207,7 @@ public class Cursor implements ForwardCursor {
     }
 
     cursorImpl = new CursorImpl(databaseImpl, locker, retainNonTxnLocks, isSecondaryCursor());
-
+    this.locker = locker;
     transaction = locker.getTransaction();
 
     /* Perform eviction for user cursors. */
@@ -219,6 +216,8 @@ public class Cursor implements ForwardCursor {
     readUncommittedDefault = cursorConfig.getReadUncommitted() || locker.isReadUncommittedDefault();
 
     serializableIsolationDefault = cursorImpl.getLocker().isSerializableIsolation();
+
+    this.putMode = putMode;
 
     /* Be sure to keep this logic in sync with checkUpdatesAllowed. */
     updateOperationsProhibited =
@@ -1839,20 +1838,185 @@ public class Cursor implements ForwardCursor {
   }
 
   OperationResult putInternal(
-      final DatabaseEntry key,
+      DatabaseEntry key,
       final DatabaseEntry data,
       final CacheMode cacheMode,
-      final ExpirationInfo expInfo) {
-    if (this.putMode == PutMode.DUP_DATA) {
-      if (this.locker instanceof Txn) {
+      ExpirationInfo expInfo) {
+    final boolean hasUserTriggers = (dbImpl.getTriggers() != null);
+    final boolean hasAssociations =
+            (dbHandle != null) && dbHandle.hasSecondaryOrForeignKeyAssociations();
+
+    if (hasAssociations) {
+      try {
+        dbImpl.getEnv().getSecondaryAssociationLock().readLock().lockInterruptibly();
+
+      } catch (InterruptedException e) {
+        throw new ThreadInterruptedException(dbImpl.getEnv(), e);
+      }
+    }
+
+    ReplicationContext repContext = dbImpl.getRepContext();
+
+    try {
+      final OperationResult result;
+      DatabaseEntry replaceKey = null;
+
+      if (putMode == PutMode.CURRENT) {
+        if (key == null) {
+          /*
+           * This is a no-dups DB. The slot key will not be affected
+           * by the update. However, if there are indexes/triggers,
+           * the value of the key is needed to update/apply the
+           * indexes/triggers after the update. So, it must be
+           * returned by the putCurrentNoNotify() call below.
+           * Furthermore, for indexes, the value of the key is needed
+           * before the update as well, to determine which indexes
+           * actually must be updated and whether the old data is
+           * also needed to do the index updates. So, we read the
+           * value of the key here by what is effectively a
+           * dirty-read.
+           */
+          if (hasAssociations || hasUserTriggers) {
+            key = new DatabaseEntry();
+            /*
+             * Latch this.bin and make "key" point to the
+             * slot key; then unlatch this.bin.
+             */
+            key.setData(cursorImpl.getCurrentKey());
+          }
+        } else {
+          /*
+           * This is a dups DB. The slot key must be replaced by the
+           * given 2-part key. We don't need the pre-update slot key.
+           */
+          replaceKey = key;
+        }
+      }
+
+      /*
+       * - oldData: if needed, will be set to the LN data before the
+       *   update.
+       * - newData: if needed, will be set to the full LN data after
+       *   the update; may be different than newData only if newData
+       *   is partial.
+       */
+      DatabaseEntry oldData = null;
+      DatabaseEntry newData = null;
+
+      /*
+       * Get secondaries from the association and determine whether the
+       * old data and new data is needed.
+       */
+      Collection<SecondaryDatabase> secondaries = null;
+
+      if (hasAssociations || hasUserTriggers) {
+
+        if (data.getPartial()) {
+          newData = new DatabaseEntry();
+        }
+
+        if (hasUserTriggers) {
+          oldData = new DatabaseEntry();
+        }
+
+        if (hasAssociations) {
+          secondaries = dbHandle.secAssoc.getSecondaries(key);
+          if (oldData == null && SecondaryDatabase.needOldDataForUpdate(secondaries)) {
+            oldData = new DatabaseEntry();
+          }
+
+          /*
+           * Even if the TTL is not specified or changed, we need the
+           * ExpirationUpdated and OldExpirationTime for the
+           * secondary update.
+           */
+          if (expInfo == null) {
+            expInfo = new ExpirationInfo(0, false, false);
+          }
+        }
+      }
+
+      final LN ln = (putMode == PutMode.OVERWRITE) ?
+              null :
+              LN.makeLN(dbImpl.getEnv(), data);
+
+      if (putMode == PutMode.OVERWRITE) {
         synchronized (this.locker) {
-          return IN.putHandleDupsSync(key, data, cacheMode, expInfo, putMode, this.locker);
+          result =
+              putCurrentNoNotify(
+                  replaceKey, data, oldData, newData, cacheMode, expInfo, repContext);
         }
       } else {
-        return IN.putHandleDups(key, data, cacheMode, expInfo, putMode);
+        result =
+                putNoNotify(key, data, ln, cacheMode, expInfo, putMode, oldData, newData, repContext);
       }
-    } else {
-      return IN.putNoDups(key, data, cacheMode, expInfo, putMode);
+
+      if (result == null) {
+        return null;
+      }
+
+      /*
+       * If returned data is null, then
+       * 1. this is an insertion not an update, or
+       * 2. an expired LN was purged and the data could not be fetched.
+       *
+       * The latter case is acceptable because the old data is needed
+       * only to delete secondary records, and if the LN expired then
+       * those secondary records will also expire naturally. The old
+       * expirationTime is passed to updateSecondary below, which will
+       * prevent secondary integrity errors.
+       */
+      if (oldData != null && oldData.getData() == null) {
+        oldData = null;
+      }
+
+      if (newData == null) {
+        newData = data;
+      }
+
+      /*
+       * Update secondaries and notify triggers.  Pass newData, not data,
+       * since data may be partial.
+       */
+      final Locker locker = cursorImpl.getLocker();
+
+      if (secondaries != null) {
+        int nWrites = 0;
+
+        for (final SecondaryDatabase secDb : secondaries) {
+
+          if (!result.isUpdate() || secDb.updateMayChangeSecondary()) {
+
+            nWrites +=
+                    secDb.updateSecondary(
+                            locker,
+                            null,
+                            key,
+                            oldData,
+                            newData,
+                            cacheMode,
+                            result.getExpirationTime(),
+                            expInfo.getExpirationUpdated(),
+                            expInfo.getOldExpirationTime());
+          }
+        }
+
+        cursorImpl.setNSecondaryWrites(nWrites);
+      }
+
+      if (hasUserTriggers) {
+        TriggerManager.runPutTriggers(locker, dbImpl, key, oldData, newData);
+      }
+
+      return result;
+
+    } catch (Error E) {
+      dbImpl.getEnv().invalidate(E);
+      throw E;
+    } finally {
+      if (hasAssociations) {
+        dbImpl.getEnv().getSecondaryAssociationLock().readLock().unlock();
+      }
     }
   }
 

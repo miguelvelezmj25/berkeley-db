@@ -311,7 +311,7 @@ public class MeasureDiskOrderedScan {
   private void populate() {
     Put putType;
     if (this.dupDb) {
-      putType = Put.DUP_DATA;
+      putType = Put.OVERWRITE;
     }
     else {
       putType = Put.NO_OVERWRITE;

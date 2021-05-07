@@ -68,6 +68,7 @@ import java.util.logging.Logger;
 public class Database implements Closeable {
 
   static final CursorConfig DEFAULT_CURSOR_CONFIG = CursorConfig.DEFAULT.clone().setNonSticky(true);
+  static final WriteOptions DEFAULT_WRITE_OPTIONS = new WriteOptions();
 
   static final CursorConfig READ_COMMITTED_CURSOR_CONFIG =
       CursorConfig.READ_COMMITTED.clone().setNonSticky(true);
@@ -1315,13 +1316,17 @@ public class Database implements Closeable {
       final DatabaseEntry key,
       final DatabaseEntry data,
       final Put putType,
-      final WriteOptions options) {
+      WriteOptions options) {
 
     try {
       checkEnv();
 
       if (putType == Put.CURRENT) {
         throw new IllegalArgumentException("putType may not be Put.CURRENT");
+      }
+
+      if (options == null) {
+        options = DEFAULT_WRITE_OPTIONS;
       }
 
       OperationResult result = null;

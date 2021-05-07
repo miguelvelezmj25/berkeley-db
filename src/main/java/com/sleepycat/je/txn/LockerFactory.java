@@ -58,18 +58,6 @@ public class LockerFactory {
       }
     }
 
-    if (dbIsTransactional) {
-
-      if (autoCommitConfig == null) {
-        autoCommitConfig = DbInternal.getDefaultTxnConfig(env);
-      }
-
-      return Txn.createAutoTxn(
-          envImpl,
-          autoCommitConfig,
-          (autoTxnIsReplicated ? ReplicationContext.MASTER : ReplicationContext.NO_REPLICATE));
-    }
-
     if (isInternalDb) {
       /* Non-transactional user operations use ThreadLocker. */
       return ThreadLocker.createThreadLocker(envImpl, autoTxnIsReplicated);
@@ -87,6 +75,18 @@ public class LockerFactory {
     if (!dbIsTransactional) {
       throw new IllegalArgumentException(
           "A Transaction cannot be used because the" + " database was opened non-transactionally");
+    }
+
+    if (dbIsTransactional) {
+
+      if (autoCommitConfig == null) {
+        autoCommitConfig = DbInternal.getDefaultTxnConfig(env);
+      }
+
+      return Txn.createAutoTxn(
+              envImpl,
+              autoCommitConfig,
+              (autoTxnIsReplicated ? ReplicationContext.MASTER : ReplicationContext.NO_REPLICATE));
     }
 
     /*
